@@ -53,9 +53,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   logger: {
-    // Auth.js errors can carry request details; only the error class is logged.
+    // Auth.js errors can carry request details; only the error's stable type is logged
+    // (`type` survives minification, unlike the class name).
     error(error) {
-      logAuthEvent("auth.error", { type: error.name });
+      const type = "type" in error && typeof error.type === "string" ? error.type : "Unknown";
+      logAuthEvent("auth.error", { type });
     },
     warn(code) {
       console.warn(JSON.stringify({ ts: new Date().toISOString(), event: "auth.warn", code }));
