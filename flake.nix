@@ -43,6 +43,7 @@
             pkgs.redis # redis-cli
 
             pkgs.git
+            pkgs.markdownlint-cli2 # docs lint, part of `pnpm lint`
           ];
 
           # uv must use the flake's interpreter, never download its own: one pinned Python everywhere.

@@ -1,0 +1,14 @@
+{
+  "config": {
+    // Prose wraps at 100 columns, the same width as ruff. Tables and code blocks may run longer.
+    "MD013": { "line_length": 100, "tables": false, "code_blocks": false }
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "**/node_modules/**",
+    "**/.venv/**",
+    // Generated and rewritten by `next dev`: not ours to format.
+    "apps/web/AGENTS.md",
+    "apps/web/CLAUDE.md"
+  ]
+}
