@@ -51,6 +51,10 @@ jobs:
               -e "s/^BASIC_AUTH_HASH=''$/BASIC_AUTH_HASH='ci-not-a-hash'/" \
               -e 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=ci/' \
               -e 's/^REDIS_PASSWORD=$/REDIS_PASSWORD=ci/' \
+              -e 's/^AUTH_SECRET=$/AUTH_SECRET=ci/' \
+              -e 's/^AUTH_GOOGLE_ID=$/AUTH_GOOGLE_ID=ci/' \
+              -e 's/^AUTH_GOOGLE_SECRET=$/AUTH_GOOGLE_SECRET=ci/' \
+              -e 's/^IMOBOS_ALLOWED_EMAILS=$/IMOBOS_ALLOWED_EMAILS=ci@ci.invalid/' \
               .env.example > .env
 
       - name: Compose config
