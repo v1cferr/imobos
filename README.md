@@ -5,8 +5,8 @@ why, and what the next action should be**. HubSpot stays the CRM, Chatwoot centr
 conversation channels (WhatsApp Business through the official Meta API), and ImobOS orchestrates
 follow-ups, AI-assisted replies with human review, and daily priorities on top of them.
 
-Status: **foundation**. The monorepo, toolchain and runtime skeleton are in place; integrations
-come next.
+Status: **authenticated shell**. Sign-in with Google (one allowlisted account) and the navigation
+are in place, with example data only; integrations come next.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ docker compose up -d
 ```
 
 `docker compose` refuses to start while a required value in `.env` is empty. Only Caddy publishes
-ports (80/443), the whole site sits behind basic auth until the application has a login, and the
+ports (80/443), the application authenticates with Google behind an email allowlist, and the
 databases live on an internal network that only the API reaches. See
 [ADR 0005](docs/adr/0005-edge-and-network-segmentation.md) and
 [the deploy runbook](docs/operations/deploy.md).
@@ -87,6 +87,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0003. Tooling and runtime are separate concerns](docs/adr/0003-tooling-vs-runtime.md)
 - [0004. pnpm workspaces orchestrate the monorepo, without Turborepo](docs/adr/0004-pnpm-workspaces-without-turborepo.md)
 - [0005. One edge, segmented networks, basic auth until there is a login](docs/adr/0005-edge-and-network-segmentation.md)
+- [0006. Google identity through Auth.js, a stateless session and an allowlist](docs/adr/0006-authentication-google-identity.md)
 
 ## Secrets
 
