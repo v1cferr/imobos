@@ -1,0 +1,35 @@
+# Secrets: this repository is public. Only .env.example is tracked.
+.env
+.env.*
+!.env.example
+
+# Nix and direnv
+result
+result-*
+.direnv/
+
+# JavaScript / TypeScript
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
