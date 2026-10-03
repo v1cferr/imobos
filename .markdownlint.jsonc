@@ -1,0 +1,4 @@
+{
+  // Prose wraps at 100 columns, the same width as ruff. Tables and code blocks may run longer.
+  "MD013": { "line_length": 100, "tables": false, "code_blocks": false }
+}
