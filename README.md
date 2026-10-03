@@ -50,13 +50,16 @@ Each app also runs on its own: `pnpm --filter @imobos/web dev`, `pnpm --filter @
 ## Runtime
 
 ```bash
-cp .env.example .env # then fill in; .env is git-ignored
+cp .env.example .env # fill in every empty value; .env is git-ignored
 docker compose build
 docker compose up -d
 ```
 
-No service publishes a port: Docker bypasses the host firewall, so only the reverse proxy will
-expose 80/443. See [ADR 0003](docs/adr/0003-tooling-vs-runtime.md).
+`docker compose` refuses to start while a required value in `.env` is empty. Only Caddy publishes
+ports (80/443), the whole site sits behind basic auth until the application has a login, and the
+databases live on an internal network that only the API reaches. See
+[ADR 0005](docs/adr/0005-edge-and-network-segmentation.md) and
+[the deploy runbook](docs/operations/deploy.md).
 
 ## Structure
 
@@ -64,15 +67,17 @@ expose 80/443. See [ADR 0003](docs/adr/0003-tooling-vs-runtime.md).
 apps/
   web/               Next.js (App Router), TypeScript, Tailwind, shadcn/ui, Lucide
   api/               FastAPI on Python 3.13, managed by uv
+infrastructure/
+  caddy/             the edge: TLS, basic auth, security headers
 docs/
   adr/               architecture decision records
-  operations/        production host reference
+  operations/        production host and deploy runbook
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)
 pnpm-workspace.yaml  workspaces: apps/*, packages/*
 ```
 
-`packages/`, `services/` and `infrastructure/` are created with their first real content
+`packages/` and `services/` are created with their first real content
 ([ADR 0001](docs/adr/0001-monorepo.md)).
 
 ## Decisions
@@ -81,6 +86,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0002. Ubuntu host, Nix for the environment, Docker Compose for services](docs/adr/0002-ubuntu-nix-docker-compose.md)
 - [0003. Tooling and runtime are separate concerns](docs/adr/0003-tooling-vs-runtime.md)
 - [0004. pnpm workspaces orchestrate the monorepo, without Turborepo](docs/adr/0004-pnpm-workspaces-without-turborepo.md)
+- [0005. One edge, segmented networks, basic auth until there is a login](docs/adr/0005-edge-and-network-segmentation.md)
 
 ## Secrets
 
