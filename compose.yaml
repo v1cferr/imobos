@@ -1,0 +1,29 @@
+# ImobOS runtime. Docker Compose owns the services; Nix owns the toolchain (docs/adr/0003).
+#
+# NO service publishes a port. Docker writes its own iptables rules and bypasses ufw, so a
+# `ports:` entry here would expose the service to the internet. Only the reverse proxy (Caddy,
+# its own subcard) will publish 80/443 and reach these services over the `app` network.
+name: imobos
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: imobos/web:local
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+    networks: [app]
+
+  api:
+    build:
+      context: apps/api
+    image: imobos/api:local
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+    networks: [app]
+
+networks:
+  app: {}
