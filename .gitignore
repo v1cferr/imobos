@@ -28,6 +28,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# TLS material never belongs in the repository
+*.pem
+
 # Editors and OS
 .vscode/*
 !.vscode/extensions.json

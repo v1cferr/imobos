@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Fail instead of warn when Node or pnpm do not match "engines": the flake pins both.
+engineStrict: true
+
+# pnpm 11 runs no dependency install scripts unless allowed here. Both ship prebuilt binaries.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

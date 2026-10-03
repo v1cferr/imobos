@@ -1,0 +1,17 @@
+{
+  "name": "imobos",
+  "private": true,
+  "description": "ImobOS monorepo root: every check runs from here across all workspaces.",
+  "scripts": {
+    "dev": "pnpm --recursive --parallel dev",
+    "lint": "pnpm --recursive lint",
+    "typecheck": "pnpm --recursive typecheck",
+    "test": "pnpm --recursive test",
+    "build": "pnpm --recursive build",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11"
+  }
+}
