@@ -6,7 +6,9 @@ vi.mock("@/lib/auth/session", () => ({ getCurrentUser: getCurrentUserMock }));
 import { GET } from "./route";
 
 describe("GET /api/me", () => {
-  beforeEach(() => getCurrentUserMock.mockReset());
+  beforeEach(() => {
+    getCurrentUserMock.mockReset();
+  });
 
   it("answers 401 without a valid session", async () => {
     getCurrentUserMock.mockResolvedValue(null);
