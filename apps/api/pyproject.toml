@@ -1,0 +1,40 @@
+[project]
+name = "imobos-api"
+version = "0.1.0"
+description = "ImobOS API: orchestration, rules, AI and audit behind the web app."
+authors = [
+    { name = "Victor Ferreira", email = "dev.victorferreira@gmail.com" }
+]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastapi>=0.142.2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, bugbear, pyupgrade, simplify
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+strict = true
+packages = ["imobos_api"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

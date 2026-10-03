@@ -1,0 +1,12 @@
+{
+  "name": "@imobos/api",
+  "private": true,
+  "description": "Thin pnpm wrapper so the root checks reach the Python API through uv.",
+  "scripts": {
+    "postinstall": "uv sync --locked",
+    "dev": "uv run uvicorn imobos_api.main:app --reload --port 8000",
+    "lint": "uv run ruff check . && uv run ruff format --check .",
+    "typecheck": "uv run mypy",
+    "test": "uv run pytest"
+  }
+}
