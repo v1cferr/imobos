@@ -1,0 +1,27 @@
+# ImobOS edge: the only service that publishes ports (ADR 0003, ADR 0005).
+# Every value comes from the environment; nothing host-specific or secret lives in this file.
+{
+	email {$ACME_EMAIL}
+}
+
+{$IMOBOS_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# A private tool: keep it out of search engines even if a URL leaks.
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	# The whole site stays behind basic auth until the application has its own login (V1C-87).
+	# OAuth callbacks and webhooks (V1C-85) will be carved out path by path, never /api/* as a whole.
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+
+	reverse_proxy web:3000
+}

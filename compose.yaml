@@ -1,11 +1,34 @@
 # ImobOS runtime. Docker Compose owns the services; Nix owns the toolchain (docs/adr/0003).
 #
-# NO service publishes a port. Docker writes its own iptables rules and bypasses ufw, so a
-# `ports:` entry here would expose the service to the internet. Only the reverse proxy (Caddy,
-# its own subcard) will publish 80/443 and reach these services over the `app` network.
+# ONLY caddy publishes ports. Docker writes its own iptables rules and bypasses ufw, so a
+# `ports:` entry anywhere else would expose that service to the internet.
+#
+# Networks (docs/adr/0005): each service sees only what it talks to.
+#   internet -> caddy -[edge]-> web -[app]-> api -[data]-> postgres, redis
 name: imobos
 
 services:
+  caddy:
+    image: caddy:2.11.6-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      IMOBOS_DOMAIN: ${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
+    volumes:
+      - ./infrastructure/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates and ACME account: losing it means re-issuing
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [edge]
+
   web:
     build:
       context: .
@@ -14,7 +37,7 @@ services:
     restart: unless-stopped
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
-    networks: [app]
+    networks: [edge, app]
 
   api:
     build:
@@ -23,7 +46,58 @@ services:
     restart: unless-stopped
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
-    networks: [app]
+      DATABASE_URL: postgresql://${POSTGRES_USER:-imobos}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-imobos}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}@redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [app, data]
+
+  postgres:
+    image: postgres:17.11 # same major as the flake's psql
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      POSTGRES_USER: ${POSTGRES_USER:-imobos}
+      POSTGRES_DB: ${POSTGRES_DB:-imobos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [data]
+
+  redis:
+    image: redis:8.8.3-alpine # same version as the flake's redis-cli
+    restart: unless-stopped
+    # The password travels through the environment, never on the command line `ps` shows.
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$REDIS_PASSWORD\" --appendonly yes"]
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [data]
 
 networks:
+  edge: {}
   app: {}
+  # No route to the internet: the databases have no reason to reach out.
+  data:
+    internal: true
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+  postgres_data: {}
+  redis_data: {}
