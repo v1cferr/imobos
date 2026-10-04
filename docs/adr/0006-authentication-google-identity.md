@@ -56,8 +56,9 @@ lines. The identity is a 12-character SHA-256 prefix of the email; tokens, autho
 cookies, secrets and full addresses are never logged, and Auth.js errors are reduced to their
 stable `type`.
 
-**Edge:** Caddy's basic auth stays in front during the rollout and is removed only after the
-production checks pass (see `docs/operations/deploy.md`).
+**Edge:** Caddy's basic auth stays in front. The broker's Google account is not known yet, so the
+cutover moved to V1C-90: it is removed only after she signs up, is approved and validates. Until
+the OAuth app is published (also V1C-90), Google itself admits only the console's test users.
 
 ## Consequences
 
