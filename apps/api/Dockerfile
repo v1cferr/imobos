@@ -17,8 +17,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-dev --no-install-project
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock alembic.ini ./
 COPY src ./src
+COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
@@ -31,4 +32,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
 
-CMD ["uvicorn", "imobos_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# Migrations first, so a new image never serves against an old schema; a failed migration stops
+# the container instead of starting the API.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn imobos_api.main:app --host 0.0.0.0 --port 8000 --proxy-headers"]

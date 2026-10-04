@@ -2,7 +2,10 @@
 
 from fastapi import FastAPI
 
+from .internal import router as internal_router
+
 app = FastAPI(title="ImobOS API")
+app.include_router(internal_router)
 
 
 @app.get("/healthz")
