@@ -44,13 +44,16 @@ describe("integration actions", () => {
 
   it("refuses to start without the client configured", async () => {
     vi.stubEnv("GOOGLE_INTEGRATIONS_CLIENT_ID", "");
-    await expect(connectGoogleCalendar()).rejects.toThrow("NEXT_REDIRECT:/integrations?error=not_configured");
+    await expect(connectGoogleCalendar()).rejects.toThrow("NEXT_REDIRECT:/integrations?toast=not_configured");
     expect(setMock).not.toHaveBeenCalled();
   });
 
   it("checks and disconnects only known providers, for signed-in users", async () => {
-    await check(form("google_calendar"));
-    await disconnect(form("google_calendar"));
+    checkMock.mockResolvedValue({ status: "connected" });
+    await expect(check(form("google_calendar"))).rejects.toThrow("NEXT_REDIRECT:/integrations?toast=checked");
+    checkMock.mockResolvedValue({ status: "error" });
+    await expect(check(form("google_calendar"))).rejects.toThrow("NEXT_REDIRECT:/integrations?toast=check_failed");
+    await expect(disconnect(form("google_calendar"))).rejects.toThrow("NEXT_REDIRECT:/integrations?toast=disconnected");
     expect(checkMock).toHaveBeenCalledWith("google_calendar");
     expect(disconnectMock).toHaveBeenCalledWith("google_calendar");
     await expect(disconnect(form("dropbox"))).rejects.toThrow("invalid provider");

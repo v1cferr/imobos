@@ -123,8 +123,8 @@ export async function exchangeGoogleCalendar(change: {
   throw new InternalApiError(response.status);
 }
 
-export async function checkConnection(provider: Provider): Promise<void> {
-  await call(`/internal/connections/${provider}/check`, { method: "POST" });
+export async function checkConnection(provider: Provider): Promise<ConnectionInfo> {
+  return (await call(`/internal/connections/${provider}/check`, { method: "POST" })).json();
 }
 
 export async function disconnectConnection(provider: Provider): Promise<void> {

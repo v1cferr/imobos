@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { rejectUser, type Role, type Status, updateUser } from "@/lib/api/internal";
 import { requireAdmin } from "@/lib/auth/session";
+import { withFlash } from "@/lib/flash";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -15,28 +17,33 @@ function userId(form: FormData): string {
   return id;
 }
 
-async function change(form: FormData, change: { status?: Status; role?: Role }): Promise<void> {
+async function change(
+  form: FormData,
+  change: { status?: Status; role?: Role },
+  flash: string,
+): Promise<void> {
   const admin = await requireAdmin();
   await updateUser(userId(form), { actor: admin.email, ...change });
   revalidatePath("/admin/users");
+  redirect(withFlash("/admin/users", flash));
 }
 
 export async function approve(form: FormData): Promise<void> {
-  await change(form, { status: "approved" });
+  await change(form, { status: "approved" }, "approved");
 }
 
 export async function disable(form: FormData): Promise<void> {
-  await change(form, { status: "disabled" });
+  await change(form, { status: "disabled" }, "disabled");
 }
 
 export async function enable(form: FormData): Promise<void> {
-  await change(form, { status: "approved" });
+  await change(form, { status: "approved" }, "enabled");
 }
 
 export async function setRole(form: FormData): Promise<void> {
   const role = form.get("role");
   if (role !== "admin" && role !== "user") throw new Error("invalid role");
-  await change(form, { role });
+  await change(form, { role }, "role_changed");
 }
 
 /** Refusing a request deletes it: nothing is kept about someone who was not let in. */
@@ -44,4 +51,5 @@ export async function reject(form: FormData): Promise<void> {
   await requireAdmin();
   await rejectUser(userId(form));
   revalidatePath("/admin/users");
+  redirect(withFlash("/admin/users", "rejected"));
 }

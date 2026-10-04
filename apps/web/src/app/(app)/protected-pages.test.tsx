@@ -34,13 +34,12 @@ import SettingsPage from "./settings/page";
 import TodayPage from "./today/page";
 
 const USER = { name: "Ana Paula", email: "ana@example.com", image: null, role: "user" as const };
-const noParams = { params: Promise.resolve({}), searchParams: Promise.resolve({}) };
 const PAGES = {
   TodayPage,
   LeadsPage,
   ConversationsPage,
   CalendarPage,
-  IntegrationsPage: () => IntegrationsPage(noParams),
+  IntegrationsPage,
   SettingsPage,
 };
 
@@ -132,7 +131,7 @@ describe("protected screens", () => {
       { provider: "google_calendar", status: null, available: true, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
       { provider: "hubspot", status: null, available: false, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
     ]);
-    render(await IntegrationsPage(noParams));
+    render(await IntegrationsPage());
     expect(screen.getByRole("button", { name: "Conectar" })).toBeDefined();
     expect(screen.getByText("Em espera")).toBeDefined();
     expect(screen.getAllByText("Em breve")).toHaveLength(4);
@@ -142,11 +141,10 @@ describe("protected screens", () => {
     listConnectionsMock.mockResolvedValue([
       { provider: "google_calendar", status: "connected", available: true, account: "corretora@example.com", connected_by: "a@example.com", connected_at: "2026-10-04T12:00:00Z", last_checked_at: "2026-10-04T12:00:00Z", last_error: null },
     ]);
-    render(await IntegrationsPage({ params: Promise.resolve({}), searchParams: Promise.resolve({ connected: "google_calendar" }) }));
+    render(await IntegrationsPage());
     expect(screen.getByText("Conta: corretora@example.com")).toBeDefined();
     expect(screen.getByRole("button", { name: "Verificar" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Desconectar" })).toBeDefined();
-    expect(screen.getByText("Google Agenda conectado.")).toBeDefined();
   });
 
 });

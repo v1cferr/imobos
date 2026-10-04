@@ -8,6 +8,11 @@ const { requireAdminMock, updateUserMock, rejectUserMock } = vi.hoisted(() => ({
 vi.mock("@/lib/auth/session", () => ({ requireAdmin: requireAdminMock }));
 vi.mock("@/lib/api/internal", () => ({ updateUser: updateUserMock, rejectUser: rejectUserMock }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  redirect: (url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  },
+}));
 
 import { approve, disable, reject, setRole } from "./actions";
 
@@ -26,7 +31,7 @@ describe("admin user actions", () => {
   });
 
   it("approves on behalf of the signed-in admin", async () => {
-    await approve(form({ id: ID }));
+    await expect(approve(form({ id: ID }))).rejects.toThrow("NEXT_REDIRECT:/admin/users?toast=approved");
     expect(updateUserMock).toHaveBeenCalledWith(ID, {
       actor: "admin@example.com",
       status: "approved",
@@ -50,9 +55,9 @@ describe("admin user actions", () => {
   });
 
   it("changes the role and rejects pending requests", async () => {
-    await setRole(form({ id: ID, role: "admin" }));
+    await expect(setRole(form({ id: ID, role: "admin" }))).rejects.toThrow("toast=role_changed");
     expect(updateUserMock).toHaveBeenCalledWith(ID, { actor: "admin@example.com", role: "admin" });
-    await reject(form({ id: ID }));
+    await expect(reject(form({ id: ID }))).rejects.toThrow("toast=rejected");
     expect(rejectUserMock).toHaveBeenCalledWith(ID);
   });
 });

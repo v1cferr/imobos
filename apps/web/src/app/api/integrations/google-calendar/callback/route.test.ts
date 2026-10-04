@@ -40,14 +40,14 @@ describe("google calendar callback", () => {
       codeVerifier: "VERIFIER",
       actor: "ana@example.com",
     });
-    expect(response.headers.get("location")).toBe("https://imobos.example/integrations?connected=google_calendar");
+    expect(response.headers.get("location")).toBe("https://imobos.example/integrations?toast=connected_google_calendar");
     expect(jar.store.has(COOKIE)).toBe(false);
   });
 
   it("refuses a forged or replayed state without exchanging anything", async () => {
     const response = await call("code=x&state=OTHER");
     expect(exchangeMock).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toContain("error=state");
+    expect(response.headers.get("location")).toContain("toast=state");
   });
 
   it("refuses when the flow cookie is missing (expired or another browser)", async () => {
@@ -65,13 +65,13 @@ describe("google calendar callback", () => {
 
   it("treats a cancel on Google's screen as cancelled, not as an error", async () => {
     const response = await call("error=access_denied&state=STATE");
-    expect(response.headers.get("location")).toContain("error=cancelled");
+    expect(response.headers.get("location")).toContain("toast=cancelled");
     expect(exchangeMock).not.toHaveBeenCalled();
   });
 
   it("reports the api's refusal code", async () => {
     exchangeMock.mockResolvedValue({ ok: false, error: "scope_not_granted" });
     const response = await call("code=x&state=STATE");
-    expect(response.headers.get("location")).toContain("error=scope_not_granted");
+    expect(response.headers.get("location")).toContain("toast=scope_not_granted");
   });
 });

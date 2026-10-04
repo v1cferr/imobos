@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,15 +22,10 @@ const DATE = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
-// Short, token-free codes from the api, said the way the broker would understand them.
+// A connection's lasting problem, from the api's short, token-free code.
 const ERRORS: Record<string, string> = {
-  cancelled: "A conexão foi cancelada na tela do Google.",
-  state: "A conexão expirou ou veio de outra aba. Tente conectar de novo.",
-  scope_not_granted:
-    "O acesso à agenda não foi marcado na tela do Google. Conecte de novo e deixe a agenda marcada.",
-  no_refresh_token: "O Google não liberou o acesso contínuo. Conecte de novo.",
   invalid_grant: "O Google recusou a autorização. Conecte de novo.",
-  not_configured: "Esta integração ainda não está configurada no servidor.",
+  no_refresh_token: "O Google não liberou o acesso contínuo. Conecte de novo.",
   http_401: "O Google não aceita mais a autorização. Desconecte e conecte de novo.",
   http_403: "O Google negou o acesso à agenda. Desconecte e conecte de novo.",
 };
@@ -101,12 +96,12 @@ function GoogleCalendarCard({ info }: { info: ConnectionInfo | undefined }) {
   );
 }
 
-export default async function IntegrationsPage({ searchParams }: PageProps<"/integrations">) {
+// Outcomes of connect, verify and disconnect arrive as toasts (lib/flash.ts); this page only shows
+// state that persists, such as a connection with a problem.
+export default async function IntegrationsPage() {
   await requireUser();
-  const [connections, params] = await Promise.all([listConnections(), searchParams]);
+  const connections = await listConnections();
   const byProvider = new Map(connections.map((c) => [c.provider, c]));
-  const error = typeof params.error === "string" ? params.error : undefined;
-  const connected = params.connected === "google_calendar";
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,19 +112,6 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/int
           feita na tela de cada serviço, e você pode desconectar quando quiser.
         </p>
       </div>
-
-      {connected && (
-        <Alert>
-          <CircleCheck aria-hidden />
-          <AlertDescription>Google Agenda conectado.</AlertDescription>
-        </Alert>
-      )}
-      {error && (
-        <Alert variant="destructive">
-          <CircleAlert aria-hidden />
-          <AlertDescription>{ERRORS[error] ?? GENERIC}</AlertDescription>
-        </Alert>
-      )}
 
       <GoogleCalendarCard info={byProvider.get("google_calendar")} />
 
