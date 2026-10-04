@@ -69,6 +69,7 @@ services:
       - "443:443/udp" # HTTP/3
     environment:
       IMOBOS_DOMAIN: ${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
+      CHATWOOT_DOMAIN: ${CHATWOOT_DOMAIN:?set CHATWOOT_DOMAIN in .env}
       ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
     volumes:
       # The directory, not the file: git replaces Caddyfile with a new inode on pull, and a single-
@@ -79,7 +80,7 @@ services:
     depends_on:
       web:
         condition: service_healthy
-    networks: [edge]
+    networks: [edge, chat]
 
   web:
     build:
