@@ -42,6 +42,8 @@ services:
       # Authentication (ADR 0006). AUTH_URL is the public origin; the Google callback is
       # ${AUTH_URL}/api/auth/callback/google and must match the OAuth client exactly.
       AUTH_URL: https://${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
+      # Also a build arg: static pages resolve metadata at build, dynamic ones at request time.
+      SITE_URL: https://${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?set AUTH_GOOGLE_ID in .env}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?set AUTH_GOOGLE_SECRET in .env}
