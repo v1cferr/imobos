@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# ImobOS backup (V1C-88): a consistent pg_dump, kept locally for a week and shipped off the host,
-# encrypted, by restic. Runs as root from imobos-backup.timer. Secrets: /etc/imobos/backup.env.
+# ImobOS backup (V1C-88, V1C-94): consistent pg_dumps of the ImobOS and Chatwoot databases, kept
+# locally for a week, and Chatwoot's attachments, all shipped off the host, encrypted, by restic.
+# Runs as root from imobos-backup.timer. Secrets: /etc/imobos/backup.env.
 # -E (errtrace): the ERR trap must also fire inside functions, or a failed dump would exit
 # without cleaning up or reporting the failure.
 set -Eeuo pipefail
@@ -33,7 +34,8 @@ trap 'on_error $LINENO' ERR
 compose() { docker compose --project-directory "$IMOBOS_DIR" -f "$IMOBOS_DIR/compose.yaml" "$@"; }
 
 restic() {
-  local mounts=(-v "$BACKUP_DIR:/data:ro" -v imobos_restic_cache:/root/.cache/restic)
+  local mounts=(-v "$BACKUP_DIR:/data:ro" -v imobos_chatwoot_storage:/chatwoot-storage:ro
+    -v imobos_restic_cache:/root/.cache/restic)
   # A local repository (tests, or a future second copy on a disk) is mounted at the same path.
   if [[ "$RESTIC_REPOSITORY" == /* ]]; then mounts+=(-v "$RESTIC_REPOSITORY:$RESTIC_REPOSITORY"); fi
   docker run --rm --hostname imobos --env-file "$ENV_FILE" "${mounts[@]}" "$RESTIC_IMAGE" "$@"
@@ -43,22 +45,33 @@ ping /start
 install -d -m 700 "$BACKUP_DIR"
 
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-dump="$BACKUP_DIR/imobos-$stamp.dump"
-log "dumping postgres to $dump"
-# Custom format: compressed, and pg_restore can pick tables. Written to a temp name first, so a
-# half-written dump never looks like a backup. The variables expand inside the container.
-# shellcheck disable=SC2016
-compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' >"$dump.partial"
-compose exec -T postgres pg_restore --list <"$dump.partial" >/dev/null
-mv "$dump.partial" "$dump"
-chmod 600 "$dump"
+
+# dump_db <compose service> <file prefix>
+dump_db() {
+  dump="$BACKUP_DIR/$2-$stamp.dump"
+  log "dumping $1 to $dump"
+  # Custom format: compressed, and pg_restore can pick tables. Written to a temp name first, so a
+  # half-written dump never looks like a backup. The variables expand inside the container.
+  # shellcheck disable=SC2016
+  compose exec -T "$1" sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' >"$dump.partial"
+  compose exec -T "$1" pg_restore --list <"$dump.partial" >/dev/null
+  mv "$dump.partial" "$dump"
+  chmod 600 "$dump"
+  dump=""
+}
+dump_db postgres imobos
+dump_db chatwoot-postgres chatwoot
 
 log "local retention: dumps older than $LOCAL_KEEP_DAYS days"
-find "$BACKUP_DIR" -maxdepth 1 -name 'imobos-*.dump' -mtime "+$LOCAL_KEEP_DAYS" -delete
+find "$BACKUP_DIR" -maxdepth 1 \( -name 'imobos-*.dump' -o -name 'chatwoot-*.dump' \) \
+  -mtime "+$LOCAL_KEEP_DAYS" -delete
 
 log "restic backup"
+# Two snapshot series: the dumps of both databases, and Chatwoot's attachment files.
 restic backup /data --tag imobos-db --exclude '*.partial'
-restic forget --tag imobos-db --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+restic backup /chatwoot-storage --tag chatwoot-storage
+# Retention applies to each series on its own (restic groups by host and paths).
+restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
 
 # Once a week, prove the backup restores: read back a slice of the stored data, then restore the
 # latest snapshot into a throwaway PostgreSQL. A failure here alerts like any other.
