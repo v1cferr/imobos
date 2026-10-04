@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 
 import { initials } from "@/components/app-shell/user-panel";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export default async function SettingsPage() {
               {user.name && <p className="truncate font-medium">{user.name}</p>}
               <p className="truncate text-muted-foreground">{user.email}</p>
             </div>
+            {user.role === "admin" && <Badge variant="secondary">Administrador</Badge>}
           </div>
           <p className="text-sm text-muted-foreground">
             Por segurança, depois de 7 dias sem usar o ImobOS será preciso entrar de novo.

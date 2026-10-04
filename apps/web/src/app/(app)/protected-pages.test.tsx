@@ -14,7 +14,7 @@ import LeadsPage from "./leads/page";
 import SettingsPage from "./settings/page";
 import TodayPage from "./today/page";
 
-const USER = { name: "Ana Paula", email: "ana@example.com", image: null };
+const USER = { name: "Ana Paula", email: "ana@example.com", image: null, role: "user" as const };
 const PAGES = { TodayPage, LeadsPage, ConversationsPage, CalendarPage, IntegrationsPage, SettingsPage };
 
 describe("protected screens", () => {
@@ -47,6 +47,14 @@ describe("protected screens", () => {
     expect(screen.getByRole("link", { name: "Hoje" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("Ana Paula")).toBeDefined();
     expect(screen.getByRole("button", { name: "Sair" })).toBeDefined();
+  });
+
+  it("only an admin sees the Administrador label", async () => {
+    render(await AppLayout({ children: null, params: Promise.resolve({}) }));
+    expect(screen.queryByText("Administrador")).toBeNull();
+    requireUserMock.mockResolvedValue({ ...USER, role: "admin" });
+    render(await SettingsPage());
+    expect(screen.getAllByText("Administrador").length).toBeGreaterThan(0);
   });
 
   it("today answers the daily question and labels its numbers as examples", async () => {

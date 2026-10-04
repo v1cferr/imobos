@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { isAllowedEmail, parseAllowlist } from "./allowlist";
+import { parseAllowlist, roleFor } from "./allowlist";
+
+const LISTS = { admins: "admin@example.com", users: "ana@example.com" };
 
 describe("allowlist", () => {
   it("parses a comma-separated list, trimming and lowercasing", () => {
@@ -10,27 +12,36 @@ describe("allowlist", () => {
     ]);
   });
 
-  it("accepts a listed email regardless of case and whitespace", () => {
-    expect(isAllowedEmail(" ANA@example.com ", "ana@example.com")).toBe(true);
+  it("gives admins and regular users their role, regardless of case and whitespace", () => {
+    expect(roleFor(" ADMIN@example.com ", LISTS)).toBe("admin");
+    expect(roleFor("Ana@Example.com", LISTS)).toBe("user");
   });
 
-  it("rejects an email that is not listed", () => {
-    expect(isAllowedEmail("intruso@example.com", "ana@example.com")).toBe(false);
+  it("prefers admin when an email is on both lists", () => {
+    expect(roleFor("ana@example.com", { admins: "ana@example.com", users: "ana@example.com" })).toBe(
+      "admin",
+    );
   });
 
-  it("fails closed when the list is empty or missing", () => {
-    expect(isAllowedEmail("ana@example.com", "")).toBe(false);
-    expect(isAllowedEmail("ana@example.com", undefined)).toBe(false);
+  it("gives no role to an email on neither list", () => {
+    expect(roleFor("intruso@example.com", LISTS)).toBeNull();
   });
 
-  it("rejects values that are not emails", () => {
-    expect(isAllowedEmail(undefined, "ana@example.com")).toBe(false);
-    expect(isAllowedEmail("", "ana@example.com")).toBe(false);
-    expect(isAllowedEmail(42, "ana@example.com")).toBe(false);
+  it("fails closed when both lists are empty or missing", () => {
+    expect(roleFor("ana@example.com", { admins: "", users: "" })).toBeNull();
+    expect(roleFor("ana@example.com", {})).toBeNull();
   });
 
-  it("does not match on substrings", () => {
-    expect(isAllowedEmail("ana@example.co", "ana@example.com")).toBe(false);
-    expect(isAllowedEmail("xana@example.com", "ana@example.com")).toBe(false);
+  it("works with only admins configured, as in the first deploy", () => {
+    expect(roleFor("admin@example.com", { admins: "admin@example.com" })).toBe("admin");
+    expect(roleFor("ana@example.com", { admins: "admin@example.com" })).toBeNull();
+  });
+
+  it("rejects values that are not emails and never matches substrings", () => {
+    expect(roleFor(undefined, LISTS)).toBeNull();
+    expect(roleFor("", LISTS)).toBeNull();
+    expect(roleFor(42, LISTS)).toBeNull();
+    expect(roleFor("xana@example.com", LISTS)).toBeNull();
+    expect(roleFor("ana@example.co", LISTS)).toBeNull();
   });
 });

@@ -22,6 +22,7 @@ export function UserPanel({ user }: { user: CurrentUser }) {
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{user.name ?? user.email}</p>
+        {user.role === "admin" && <p className="text-xs text-muted-foreground">Administrador</p>}
       </div>
       <form action={logout}>
         <Button type="submit" variant="ghost" size="icon" aria-label="Sair" title="Sair">

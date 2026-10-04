@@ -54,7 +54,7 @@ jobs:
               -e 's/^AUTH_SECRET=$/AUTH_SECRET=ci/' \
               -e 's/^AUTH_GOOGLE_ID=$/AUTH_GOOGLE_ID=ci/' \
               -e 's/^AUTH_GOOGLE_SECRET=$/AUTH_GOOGLE_SECRET=ci/' \
-              -e 's/^IMOBOS_ALLOWED_EMAILS=$/IMOBOS_ALLOWED_EMAILS=ci@ci.invalid/' \
+              -e 's/^IMOBOS_ADMIN_EMAILS=$/IMOBOS_ADMIN_EMAILS=ci@ci.invalid/' \
               .env.example > .env
 
       - name: Compose config

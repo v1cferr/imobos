@@ -37,12 +37,19 @@ login-CSRF check on the callback and replay protection on the id_token.
 are HttpOnly and `SameSite=Lax`, and over HTTPS they are `Secure` with the `__Secure-` prefix.
 `AUTH_SECRET` lives only in the host's `.env`; rotating it signs everyone out.
 
-**Authorization:** `IMOBOS_ALLOWED_EMAILS` (environment, never the repository) lists the Google
-emails allowed in; Google must have verified the address. An empty list denies everyone. There is no
-user table, so there is no sign-up to abuse. The check runs at sign-in **and again next to the
-data**: `requireUser()` in the layout and every page, `getCurrentUser()` in Route Handlers (401,
-never a redirect). `proxy.ts` is only an optimistic redirect to `/login`. Removing an email from the
-list locks that person out on the next request, even with a valid cookie.
+**Authorization:** two environment lists (never the repository) give each Google email a role:
+`IMOBOS_ADMIN_EMAILS` (operators, required) and `IMOBOS_ALLOWED_EMAILS` (regular users, may be
+empty). Google must have verified the address, and an email on neither list is refused, so empty
+lists deny everyone. There is no user table, so there is no sign-up to abuse. The check runs at
+sign-in **and again next to the data**: `requireUser()` in the layout and every page,
+`getCurrentUser()` in Route Handlers (401, never a redirect). The role is recomputed from the
+environment on every request and never trusted from the cookie, so removing an email locks that
+person out on the next request, even with a valid session. `proxy.ts` is only an optimistic
+redirect to `/login`. Today all roles see the same single workspace; admin-only screens arrive
+with their first use.
+
+**Next:** open sign-up with admin approval (V1C-90) replaces the environment lists with a user
+table owned by the API, which keeps the database off the web container (ADR 0005).
 
 **Observability:** `auth.login.success`, `auth.login.denied`, `auth.logout` and `auth.error` as JSON
 lines. The identity is a 12-character SHA-256 prefix of the email; tokens, authorization codes,

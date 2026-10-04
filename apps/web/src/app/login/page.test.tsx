@@ -43,7 +43,7 @@ describe("/login", () => {
   });
 
   it("sends a signed-in user straight to /today", async () => {
-    getCurrentUserMock.mockResolvedValue({ name: "Ana", email: "ana@example.com", image: null });
+    getCurrentUserMock.mockResolvedValue({ name: "Ana", email: "ana@example.com", image: null, role: "user" });
     await expect(LoginPage(params())).rejects.toThrow("NEXT_REDIRECT:/today");
   });
 });

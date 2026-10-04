@@ -30,8 +30,9 @@ Fill `.env`:
   password manager. Its authorized redirect URIs are exactly
   `https://<domain>/api/auth/callback/google` (and `http://localhost:3000/api/auth/callback/google`
   for development); no wildcard.
-- `IMOBOS_ALLOWED_EMAILS`: the Google email(s) allowed in, comma-separated. Editing it and running
-  `docker compose up -d` locks a removed address out on its next request.
+- `IMOBOS_ADMIN_EMAILS` (required) and `IMOBOS_ALLOWED_EMAILS` (may be empty): the Google emails
+  that may sign in as admin or as a regular user, comma-separated. Editing them and running
+  `docker compose up -d` applies on the next request, including locking a removed address out.
 
 ```bash
 docker compose up -d --build

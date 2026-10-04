@@ -43,7 +43,9 @@ services:
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?set AUTH_GOOGLE_ID in .env}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?set AUTH_GOOGLE_SECRET in .env}
-      IMOBOS_ALLOWED_EMAILS: ${IMOBOS_ALLOWED_EMAILS:?set IMOBOS_ALLOWED_EMAILS in .env}
+      # Roles (ADR 0006): admins are required, regular users may be empty for now.
+      IMOBOS_ADMIN_EMAILS: ${IMOBOS_ADMIN_EMAILS:?set IMOBOS_ADMIN_EMAILS in .env}
+      IMOBOS_ALLOWED_EMAILS: ${IMOBOS_ALLOWED_EMAILS:-}
     networks: [edge, app]
 
   api:

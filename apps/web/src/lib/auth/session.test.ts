@@ -19,6 +19,7 @@ const session = (email: string) => ({
 
 describe("session guards", () => {
   beforeEach(() => {
+    vi.stubEnv("IMOBOS_ADMIN_EMAILS", "admin@example.com");
     vi.stubEnv("IMOBOS_ALLOWED_EMAILS", "ana@example.com");
     authMock.mockReset();
     redirectMock.mockClear();
@@ -30,7 +31,13 @@ describe("session guards", () => {
       name: "Ana",
       email: "ana@example.com",
       image: null,
+      role: "user",
     });
+  });
+
+  it("recomputes the role from the environment: an admin is an admin", async () => {
+    authMock.mockResolvedValue(session("admin@example.com"));
+    await expect(getCurrentUser()).resolves.toMatchObject({ role: "admin" });
   });
 
   it("returns null without a session", async () => {

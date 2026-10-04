@@ -18,7 +18,7 @@ describe("GET /api/me", () => {
   });
 
   it("answers the name and picture, never the email, for the signed-in user", async () => {
-    getCurrentUserMock.mockResolvedValue({ name: "Ana", email: "ana@example.com", image: null });
+    getCurrentUserMock.mockResolvedValue({ name: "Ana", email: "ana@example.com", image: null, role: "user" });
     const response = await GET();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ name: "Ana", image: null });
