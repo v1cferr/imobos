@@ -5,8 +5,8 @@ why, and what the next action should be**. HubSpot stays the CRM, Chatwoot centr
 conversation channels (WhatsApp Business through the official Meta API), and ImobOS orchestrates
 follow-ups, AI-assisted replies with human review, and daily priorities on top of them.
 
-Status: **authenticated shell**. Sign-in with Google (one allowlisted account) and the navigation
-are in place, with example data only; integrations come next.
+Status: **authenticated shell**. Sign-in with Google, open sign-up with admin approval and the
+navigation are in place, with example data only; integrations come next.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ docker compose up -d
 ```
 
 `docker compose` refuses to start while a required value in `.env` is empty. Only Caddy publishes
-ports (80/443), the application authenticates with Google behind an email allowlist, and the
+ports (80/443), the application authenticates with Google and an admin approves who enters, and the
 databases live on an internal network that only the API reaches. See
 [ADR 0005](docs/adr/0005-edge-and-network-segmentation.md) and
 [the deploy runbook](docs/operations/deploy.md).
@@ -66,7 +66,7 @@ databases live on an internal network that only the API reaches. See
 ```text
 apps/
   web/               Next.js (App Router), TypeScript, Tailwind, shadcn/ui, Lucide
-  api/               FastAPI on Python 3.13, managed by uv
+  api/               FastAPI on Python 3.13, managed by uv; owns the database (Alembic)
 infrastructure/
   caddy/             the edge: TLS, basic auth, security headers
 docs/
@@ -88,6 +88,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0004. pnpm workspaces orchestrate the monorepo, without Turborepo](docs/adr/0004-pnpm-workspaces-without-turborepo.md)
 - [0005. One edge, segmented networks, basic auth until there is a login](docs/adr/0005-edge-and-network-segmentation.md)
 - [0006. Google identity through Auth.js, a stateless session and an allowlist](docs/adr/0006-authentication-google-identity.md)
+- [0007. Open sign-up with admin approval, owned by the API](docs/adr/0007-sign-up-with-admin-approval.md)
 
 ## Secrets
 

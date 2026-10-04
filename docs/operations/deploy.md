@@ -30,9 +30,11 @@ Fill `.env`:
   password manager. Its authorized redirect URIs are exactly
   `https://<domain>/api/auth/callback/google` (and `http://localhost:3000/api/auth/callback/google`
   for development); no wildcard.
-- `IMOBOS_ADMIN_EMAILS` (required) and `IMOBOS_ALLOWED_EMAILS` (may be empty): the Google emails
-  that may sign in as admin or as a regular user, comma-separated. Editing them and running
-  `docker compose up -d` applies on the next request, including locking a removed address out.
+- `IMOBOS_ADMIN_EMAILS` (required): bootstrap admins, comma-separated Google emails. Everyone
+  else signs up and is approved on `/admin/users` (ADR 0007).
+- `IMOBOS_SIGNUP_OPEN` (`true`/`false`) and `IMOBOS_MAX_PENDING`: whether unknown accounts may
+  request access, and how many requests may wait. Close sign-up once the expected users are in.
+- `INTERNAL_API_TOKEN`: generated on the host, `openssl rand -hex 32`; shared by web and api.
 
 ```bash
 docker compose up -d --build
@@ -55,10 +57,12 @@ curl -sI https://<domain>/today       # 307 to /login: no session, no page
 curl -s  https://<domain>/api/me      # {"error":"unauthorized"} with 401
 sudo ss -tlnp                         # only 22, 80 and 443 listen publicly
 docker compose logs web | grep '"event":"auth'   # auth events, never tokens or emails
+docker compose exec api alembic current          # the schema revision in use
 ```
 
-Then in a browser: the allowed Google account lands on `/today`, any other account is refused on
-`/login`, a refresh keeps the session, and "Sair" ends it.
+Then in a browser: an admin lands on `/today`; a new account sees "pedido de acesso enviado" and
+appears on `/admin/users`; once approved it enters; a refresh keeps the session, and "Sair" ends
+it. `https://<domain>/privacidade` must load without basic auth, and nothing else may.
 
 ## Data
 

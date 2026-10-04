@@ -1,6 +1,6 @@
 # 0006. Google identity through Auth.js, a stateless session and an allowlist
 
-- Status: accepted
+- Status: accepted; authorization superseded by ADR 0007
 - Date: 2026-10-03
 - Card: V1C-89
 
@@ -48,8 +48,8 @@ person out on the next request, even with a valid session. `proxy.ts` is only an
 redirect to `/login`. Today all roles see the same single workspace; admin-only screens arrive
 with their first use.
 
-**Next:** open sign-up with admin approval (V1C-90) replaces the environment lists with a user
-table owned by the API, which keeps the database off the web container (ADR 0005).
+**Superseded:** open sign-up with admin approval (ADR 0007, V1C-90) replaced these lists with a
+user table owned by the API; only `IMOBOS_ADMIN_EMAILS` remains, as bootstrap admins.
 
 **Observability:** `auth.login.success`, `auth.login.denied`, `auth.logout` and `auth.error` as JSON
 lines. The identity is a 12-character SHA-256 prefix of the email; tokens, authorization codes,
