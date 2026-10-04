@@ -6,17 +6,20 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
-from . import users
+from . import connections, google, users
 from .config import Settings
 from .db import get_session, get_settings
-from .models import UserRole, UserStatus
+from .http import get_http_client
+from .models import ConnectionStatus, Provider, UserRole, UserStatus
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 SessionDep = Annotated[Session, Depends(get_session)]
+HttpDep = Annotated[httpx.Client, Depends(get_http_client)]
 
 
 def require_internal_token(
@@ -119,3 +122,89 @@ def reject(user_id: uuid.UUID, session: SessionDep, settings: SettingsDep) -> No
         raise HTTPException(status.HTTP_404_NOT_FOUND) from e
     except users.ProtectedUserError as e:
         raise HTTPException(status.HTTP_403_FORBIDDEN) from e
+
+
+class ConnectionOut(BaseModel):
+    """What the screen and the dashboard may know. Never a token."""
+
+    provider: Provider
+    status: ConnectionStatus | None  # None: disconnected
+    available: bool  # the host has this provider configured
+    account: str | None = None
+    connected_by: str | None = None
+    connected_at: datetime | None = None
+    last_checked_at: datetime | None = None
+    last_error: str | None = None
+
+
+def _out(settings: Settings, provider: Provider, conn: object | None) -> ConnectionOut:
+    base = ConnectionOut(
+        provider=provider, status=None, available=connections.configured(settings, provider)
+    )
+    if conn is None:
+        return base
+    return base.model_copy(
+        update={
+            k: getattr(conn, k)
+            for k in (
+                "status",
+                "account",
+                "connected_by",
+                "connected_at",
+                "last_checked_at",
+                "last_error",
+            )
+        }
+    )
+
+
+class GoogleExchange(BaseModel):
+    code: str
+    code_verifier: str
+    actor: EmailStr
+
+
+@router.get("/connections")
+def list_connections(session: SessionDep, settings: SettingsDep) -> list[ConnectionOut]:
+    rows = connections.list_connections(session)
+    return [_out(settings, p, rows.get(p)) for p in Provider]
+
+
+@router.post("/connections/google_calendar/exchange")
+def connect_google(
+    body: GoogleExchange, session: SessionDep, settings: SettingsDep, client: HttpDep
+) -> ConnectionOut:
+    try:
+        conn = connections.connect_google_calendar(
+            session,
+            settings,
+            client,
+            code=body.code,
+            code_verifier=body.code_verifier,
+            actor=body.actor,
+        )
+    except connections.NotConfiguredError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, "not_configured") from e
+    except google.GoogleError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, e.code) from e
+    return _out(settings, Provider.GOOGLE_CALENDAR, conn)
+
+
+@router.post("/connections/{provider}/check")
+def check(
+    provider: Provider, session: SessionDep, settings: SettingsDep, client: HttpDep
+) -> ConnectionOut:
+    try:
+        conn = connections.check(session, settings, client, provider)
+    except connections.NotConfiguredError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, "not_configured") from e
+    if conn is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    return _out(settings, provider, conn)
+
+
+@router.delete("/connections/{provider}", status_code=status.HTTP_204_NO_CONTENT)
+def disconnect(
+    provider: Provider, session: SessionDep, settings: SettingsDep, client: HttpDep
+) -> None:
+    connections.disconnect(session, settings, client, provider)

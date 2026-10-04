@@ -34,6 +34,16 @@ def _enum(kind: type[enum.StrEnum], name: str) -> Enum:
     )
 
 
+class Provider(enum.StrEnum):
+    GOOGLE_CALENDAR = "google_calendar"
+    HUBSPOT = "hubspot"
+
+
+class ConnectionStatus(enum.StrEnum):
+    CONNECTED = "connected"
+    ERROR = "error"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -49,3 +59,27 @@ class User(Base):
     )
     # Email of the admin who last approved, disabled or re-roled this user.
     decided_by: Mapped[str | None] = mapped_column(String(320))
+
+
+class Connection(Base):
+    """A service ImobOS may reach on the broker's behalf (ADR 0008). One per provider: the workspace
+    is single-tenant. Tokens are stored only as Fernet ciphertext; no row means disconnected."""
+
+    __tablename__ = "connections"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    provider: Mapped[Provider] = mapped_column(_enum(Provider, "connection_provider"), unique=True)
+    status: Mapped[ConnectionStatus] = mapped_column(_enum(ConnectionStatus, "connection_status"))
+    # Which external account was connected, for the screen ("conta: maria@gmail.com").
+    account: Mapped[str | None] = mapped_column(String(320))
+    scopes: Mapped[str] = mapped_column(String(1000))
+    access_token_enc: Mapped[str | None] = mapped_column(String(4000))
+    refresh_token_enc: Mapped[str | None] = mapped_column(String(4000))
+    access_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    connected_by: Mapped[str] = mapped_column(String(320))
+    connected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # A short, token-free reason ("invalid_grant", "http_403"), shown to the user and the dashboard.
+    last_error: Mapped[str | None] = mapped_column(String(200))
