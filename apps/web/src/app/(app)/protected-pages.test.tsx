@@ -1,16 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireUserMock, requireAdminMock, listUsersMock } = vi.hoisted(() => ({
+const { requireUserMock, requireAdminMock, listUsersMock, listConnectionsMock } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
   requireAdminMock: vi.fn(),
   listUsersMock: vi.fn(),
+  listConnectionsMock: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({
   requireUser: requireUserMock,
   requireAdmin: requireAdminMock,
 }));
-vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock }));
+vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock, listConnections: listConnectionsMock }));
+vi.mock("./integrations/actions", () => ({ check: vi.fn(), connectGoogleCalendar: vi.fn(), disconnect: vi.fn() }));
 vi.mock("./actions", () => ({ logout: vi.fn() }));
 vi.mock("./admin/users/actions", () => ({
   approve: vi.fn(),
@@ -32,7 +34,15 @@ import SettingsPage from "./settings/page";
 import TodayPage from "./today/page";
 
 const USER = { name: "Ana Paula", email: "ana@example.com", image: null, role: "user" as const };
-const PAGES = { TodayPage, LeadsPage, ConversationsPage, CalendarPage, IntegrationsPage, SettingsPage };
+const noParams = { params: Promise.resolve({}), searchParams: Promise.resolve({}) };
+const PAGES = {
+  TodayPage,
+  LeadsPage,
+  ConversationsPage,
+  CalendarPage,
+  IntegrationsPage: () => IntegrationsPage(noParams),
+  SettingsPage,
+};
 
 describe("protected screens", () => {
   // Block body on purpose: a function returned from beforeEach becomes a teardown hook.
@@ -117,9 +127,26 @@ describe("protected screens", () => {
     expect(screen.getByText("João Silva")).toBeDefined();
   });
 
-  it("integrations shows the services without any way to connect them yet", async () => {
-    render(await IntegrationsPage());
-    expect(screen.getAllByText("Em breve")).toHaveLength(6);
-    expect(screen.queryByRole("button")).toBeNull();
+  it("integrations shows the calendar state, HubSpot on hold and the Chatwoot channels", async () => {
+    listConnectionsMock.mockResolvedValue([
+      { provider: "google_calendar", status: null, available: true, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
+      { provider: "hubspot", status: null, available: false, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
+    ]);
+    render(await IntegrationsPage(noParams));
+    expect(screen.getByRole("button", { name: "Conectar" })).toBeDefined();
+    expect(screen.getByText("Em espera")).toBeDefined();
+    expect(screen.getAllByText("Em breve")).toHaveLength(4);
   });
+
+  it("a connected calendar shows the account and offers verify and disconnect, never a token", async () => {
+    listConnectionsMock.mockResolvedValue([
+      { provider: "google_calendar", status: "connected", available: true, account: "corretora@example.com", connected_by: "a@example.com", connected_at: "2026-10-04T12:00:00Z", last_checked_at: "2026-10-04T12:00:00Z", last_error: null },
+    ]);
+    render(await IntegrationsPage({ params: Promise.resolve({}), searchParams: Promise.resolve({ connected: "google_calendar" }) }));
+    expect(screen.getByText("Conta: corretora@example.com")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Verificar" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Desconectar" })).toBeDefined();
+    expect(screen.getByText("Google Agenda conectado.")).toBeDefined();
+  });
+
 });

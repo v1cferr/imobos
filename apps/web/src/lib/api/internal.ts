@@ -81,3 +81,52 @@ export async function rejectUser(id: string): Promise<void> {
   const response = await call(`/internal/users/${encodeURIComponent(id)}`, { method: "DELETE" });
   if (response.status === 404) throw new InternalApiError(404);
 }
+
+export type Provider = "google_calendar" | "hubspot";
+
+/** What the api tells about a connected account. Never carries a token (ADR 0008). */
+export type ConnectionInfo = {
+  provider: Provider;
+  status: "connected" | "error" | null;
+  available: boolean;
+  account: string | null;
+  connected_by: string | null;
+  connected_at: string | null;
+  last_checked_at: string | null;
+  last_error: string | null;
+};
+
+export async function listConnections(): Promise<ConnectionInfo[]> {
+  return (await call("/internal/connections")).json();
+}
+
+/** Hands the authorization code to the api, which exchanges and stores the tokens. */
+export async function exchangeGoogleCalendar(change: {
+  code: string;
+  codeVerifier: string;
+  actor: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const base = process.env.API_INTERNAL_URL;
+  const token = process.env.INTERNAL_API_TOKEN;
+  if (!base || !token) throw new InternalApiError(500);
+  const response = await fetch(`${base}/internal/connections/google_calendar/exchange`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "content-type": "application/json", "x-internal-token": token },
+    body: JSON.stringify({ code: change.code, code_verifier: change.codeVerifier, actor: change.actor }),
+  });
+  if (response.ok) return { ok: true };
+  if (response.status === 400 || response.status === 409) {
+    const { detail } = (await response.json()) as { detail?: string };
+    return { ok: false, error: detail ?? "exchange_failed" };
+  }
+  throw new InternalApiError(response.status);
+}
+
+export async function checkConnection(provider: Provider): Promise<void> {
+  await call(`/internal/connections/${provider}/check`, { method: "POST" });
+}
+
+export async function disconnectConnection(provider: Provider): Promise<void> {
+  await call(`/internal/connections/${provider}`, { method: "DELETE" });
+}
