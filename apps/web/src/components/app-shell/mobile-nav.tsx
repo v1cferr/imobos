@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { NavLinks } from "./nav-links";
 
 /** The same navigation as the sidebar, in a drawer for small screens. */
-export function MobileNav({ userPanel }: { userPanel: ReactNode }) {
+export function MobileNav({ userPanel, isAdmin }: { userPanel: ReactNode; isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
@@ -26,6 +26,7 @@ export function MobileNav({ userPanel }: { userPanel: ReactNode }) {
           <NavLinks group="main" onNavigate={close} />
           <Separator className="my-4" />
           <NavLinks group="secondary" onNavigate={close} />
+          {isAdmin && <NavLinks group="admin" onNavigate={close} />}
         </nav>
         <Separator className="my-4" />
         {userPanel}

@@ -13,9 +13,9 @@ vi.mock("./actions", () => ({ signInWithGoogle: vi.fn() }));
 
 import LoginPage from "./page";
 
-const params = (error?: string) => ({
+const params = (error?: string, status?: string) => ({
   params: Promise.resolve({}),
-  searchParams: Promise.resolve(error ? { error } : {}),
+  searchParams: Promise.resolve({ ...(error ? { error } : {}), ...(status ? { status } : {}) }),
 });
 
 describe("/login", () => {
@@ -35,6 +35,12 @@ describe("/login", () => {
     const alert = screen.getByRole("alert");
     expect(alert.textContent).toContain("não tem acesso");
     expect(alert.textContent).not.toMatch(/@/);
+  });
+
+  it("tells a new account its request is waiting for approval", async () => {
+    render(await LoginPage(params(undefined, "pending")));
+    expect(screen.getByRole("status").textContent).toContain("aprovar");
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("shows a generic message for any other error code", async () => {

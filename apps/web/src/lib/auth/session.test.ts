@@ -1,32 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock, redirectMock } = vi.hoisted(() => ({
+const { authMock, getAccessMock, redirectMock, notFoundMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
+  getAccessMock: vi.fn(),
   redirectMock: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT:${path}`);
+  }),
+  notFoundMock: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
   }),
 }));
 
 vi.mock("@/auth", () => ({ auth: authMock }));
-vi.mock("next/navigation", () => ({ redirect: redirectMock }));
+vi.mock("@/lib/api/internal", () => ({ getAccess: getAccessMock }));
+vi.mock("next/navigation", () => ({ redirect: redirectMock, notFound: notFoundMock }));
 
-import { getCurrentUser, requireUser } from "./session";
+import { getCurrentUser, requireAdmin, requireUser } from "./session";
 
-const session = (email: string) => ({
-  user: { name: "Ana", email, image: null },
-  expires: "2099-01-01T00:00:00.000Z",
-});
+const session = { user: { name: "Ana", email: "ana@example.com", image: null }, expires: "2099" };
 
 describe("session guards", () => {
   beforeEach(() => {
-    vi.stubEnv("IMOBOS_ADMIN_EMAILS", "admin@example.com");
-    vi.stubEnv("IMOBOS_ALLOWED_EMAILS", "ana@example.com");
-    authMock.mockReset();
+    authMock.mockReset().mockResolvedValue(session);
+    getAccessMock.mockReset();
     redirectMock.mockClear();
   });
 
-  it("returns the user for a valid session of an allowlisted email", async () => {
-    authMock.mockResolvedValue(session("ana@example.com"));
+  it("returns an approved user with the role the api reports", async () => {
+    getAccessMock.mockResolvedValue({ status: "approved", role: "user" });
     await expect(getCurrentUser()).resolves.toEqual({
       name: "Ana",
       email: "ana@example.com",
@@ -35,31 +36,34 @@ describe("session guards", () => {
     });
   });
 
-  it("recomputes the role from the environment: an admin is an admin", async () => {
-    authMock.mockResolvedValue(session("admin@example.com"));
-    await expect(getCurrentUser()).resolves.toMatchObject({ role: "admin" });
-  });
-
-  it("returns null without a session", async () => {
-    authMock.mockResolvedValue(null);
+  it.each([
+    ["no session", null, null],
+    ["unknown to the api", session, null],
+    ["pending", session, { status: "pending", role: "user" }],
+    ["disabled", session, { status: "disabled", role: "user" }],
+  ])("returns null when %s", async (_, s, access) => {
+    authMock.mockResolvedValue(s);
+    getAccessMock.mockResolvedValue(access);
     await expect(getCurrentUser()).resolves.toBeNull();
   });
 
-  it("returns null when the session's email was removed from the allowlist", async () => {
-    authMock.mockResolvedValue(session("ana@example.com"));
-    vi.stubEnv("IMOBOS_ALLOWED_EMAILS", "outra@example.com");
+  it("fails closed when the api cannot answer", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    getAccessMock.mockImplementation(async () => {
+      throw new Error("down");
+    });
     await expect(getCurrentUser()).resolves.toBeNull();
   });
 
-  it("requireUser sends a visitor without a session to /login", async () => {
-    authMock.mockResolvedValue(null);
+  it("requireUser sends anyone without access to /login", async () => {
+    getAccessMock.mockResolvedValue({ status: "pending", role: "user" });
     await expect(requireUser()).rejects.toThrow("NEXT_REDIRECT:/login");
-    expect(redirectMock).toHaveBeenCalledWith("/login");
   });
 
-  it("requireUser lets an allowlisted user through without redirecting", async () => {
-    authMock.mockResolvedValue(session("ana@example.com"));
-    await expect(requireUser()).resolves.toMatchObject({ email: "ana@example.com" });
-    expect(redirectMock).not.toHaveBeenCalled();
+  it("requireAdmin answers 404 to a regular user and passes an admin", async () => {
+    getAccessMock.mockResolvedValue({ status: "approved", role: "user" });
+    await expect(requireAdmin()).rejects.toThrow("NEXT_NOT_FOUND");
+    getAccessMock.mockResolvedValue({ status: "approved", role: "admin" });
+    await expect(requireAdmin()).resolves.toMatchObject({ role: "admin" });
   });
 });

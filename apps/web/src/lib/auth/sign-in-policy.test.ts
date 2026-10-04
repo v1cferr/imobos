@@ -1,58 +1,62 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { signInUserMock } = vi.hoisted(() => ({ signInUserMock: vi.fn() }));
+vi.mock("@/lib/api/internal", () => ({ signInUser: signInUserMock }));
 
 import { decideSignIn } from "./sign-in-policy";
 
-const ALLOWED = "ana@example.com";
-const LISTS = { admins: "admin@example.com", users: ALLOWED };
+const verified = { email: "ana@example.com", email_verified: true, name: "Ana", sub: "g-1" };
 
 describe("decideSignIn", () => {
-  it("lets the allowlisted Google identity in", () => {
-    expect(
-      decideSignIn(
-        { provider: "google", profile: { email: "Ana@Example.com", email_verified: true } },
-        LISTS,
-      ),
-    ).toEqual({ allowed: true, role: "user" });
+  beforeEach(() => {
+    signInUserMock.mockReset();
   });
 
-  it("lets an admin in with the admin role", () => {
-    expect(
-      decideSignIn(
-        { provider: "google", profile: { email: "admin@example.com", email_verified: true } },
-        LISTS,
-      ),
-    ).toEqual({ allowed: true, role: "admin" });
-  });
-
-  it("refuses any other Google account", () => {
-    expect(
-      decideSignIn(
-        { provider: "google", profile: { email: "outra@example.com", email_verified: true } },
-        LISTS,
-      ),
-    ).toEqual({ allowed: false, reason: "not_allowlisted" });
-  });
-
-  it("refuses an allowlisted address Google has not verified", () => {
-    expect(
-      decideSignIn({ provider: "google", profile: { email: ALLOWED, email_verified: false } }, LISTS),
-    ).toEqual({ allowed: false, reason: "unverified_email" });
-    expect(decideSignIn({ provider: "google", profile: { email: ALLOWED } }, LISTS)).toEqual({
-      allowed: false,
-      reason: "unverified_email",
+  it("lets an approved user in", async () => {
+    signInUserMock.mockResolvedValue({ outcome: "approved", role: "user" });
+    await expect(decideSignIn({ provider: "google", profile: verified })).resolves.toEqual({
+      allowed: true,
+    });
+    expect(signInUserMock).toHaveBeenCalledWith({
+      email: "ana@example.com",
+      name: "Ana",
+      googleSub: "g-1",
     });
   });
 
-  it("refuses any provider other than Google", () => {
-    expect(
-      decideSignIn({ provider: "github", profile: { email: ALLOWED, email_verified: true } }, LISTS),
-    ).toEqual({ allowed: false, reason: "provider" });
+  it("turns an unknown account into a pending request, not a session", async () => {
+    signInUserMock.mockResolvedValue({ outcome: "pending", role: "user" });
+    await expect(decideSignIn({ provider: "google", profile: verified })).resolves.toEqual({
+      allowed: "pending",
+    });
   });
 
-  it("refuses when there is no profile at all", () => {
-    expect(decideSignIn({ provider: "google", profile: undefined }, LISTS)).toEqual({
+  it.each(["disabled", "closed", "full", "conflict"] as const)(
+    "refuses when the api answers %s",
+    async (outcome) => {
+      signInUserMock.mockResolvedValue({ outcome, role: null });
+      await expect(decideSignIn({ provider: "google", profile: verified })).resolves.toEqual({
+        allowed: false,
+        reason: outcome,
+      });
+    },
+  );
+
+  it("never asks the api about an unverified email, a missing sub or another provider", async () => {
+    await expect(
+      decideSignIn({ provider: "google", profile: { ...verified, email_verified: false } }),
+    ).resolves.toEqual({ allowed: false, reason: "unverified_email" });
+    await expect(
+      decideSignIn({ provider: "google", profile: { ...verified, sub: "" } }),
+    ).resolves.toEqual({ allowed: false, reason: "unverified_email" });
+    await expect(decideSignIn({ provider: "github", profile: verified })).resolves.toEqual({
+      allowed: false,
+      reason: "provider",
+    });
+    await expect(decideSignIn({ provider: "google", profile: undefined })).resolves.toEqual({
       allowed: false,
       reason: "unverified_email",
     });
+    expect(signInUserMock).not.toHaveBeenCalled();
   });
 });

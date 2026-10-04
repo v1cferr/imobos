@@ -18,6 +18,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
           <NavLinks group="main" />
           <Separator className="my-4" />
           <NavLinks group="secondary" />
+          {user.role === "admin" && <NavLinks group="admin" />}
         </nav>
         <Separator className="my-4" />
         {userPanel}
@@ -25,7 +26,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-2 border-b px-2 py-2 md:hidden">
-          <MobileNav userPanel={userPanel} />
+          <MobileNav userPanel={userPanel} isAdmin={user.role === "admin"} />
           <span className="text-lg font-semibold">ImobOS</span>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 p-4 md:p-8">{children}</main>

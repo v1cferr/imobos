@@ -10,16 +10,17 @@ import { signInWithGoogle } from "./actions";
 // Auth.js reports why a sign-in failed through ?error=. Unknown codes get the generic message,
 // and the denial never says which account WOULD be accepted.
 const ERROR_MESSAGES: Record<string, string> = {
-  AccessDenied: "Esta conta Google não tem acesso ao ImobOS. Entre com a conta autorizada.",
+  AccessDenied: "Esta conta Google não tem acesso ao ImobOS. Fale com o administrador.",
 };
 const GENERIC_ERROR = "Não foi possível entrar agora. Tente de novo em instantes.";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   if (await getCurrentUser()) redirect("/today");
 
-  const { error } = await searchParams;
+  const { error, status } = await searchParams;
   const code = typeof error === "string" ? error : undefined;
   const message = code ? (ERROR_MESSAGES[code] ?? GENERIC_ERROR) : undefined;
+  const pending = status === "pending";
 
   return (
     <main className="flex flex-1 items-center justify-center bg-muted/40 p-4">
@@ -32,6 +33,12 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <CardDescription>Seus clientes e retornos do dia, num lugar só.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {pending && (
+            <p role="status" className="rounded-md bg-muted p-3 text-sm">
+              Pedido de acesso enviado. Assim que o administrador aprovar, é só entrar de novo com
+              a mesma conta Google.
+            </p>
+          )}
           {message && (
             <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {message}

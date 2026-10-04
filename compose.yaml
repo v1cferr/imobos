@@ -43,9 +43,9 @@ services:
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?set AUTH_GOOGLE_ID in .env}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?set AUTH_GOOGLE_SECRET in .env}
-      # Roles (ADR 0006): admins are required, regular users may be empty for now.
-      IMOBOS_ADMIN_EMAILS: ${IMOBOS_ADMIN_EMAILS:?set IMOBOS_ADMIN_EMAILS in .env}
-      IMOBOS_ALLOWED_EMAILS: ${IMOBOS_ALLOWED_EMAILS:-}
+      # Who may sign in is decided by the api's user table (ADR 0007), over the app network.
+      API_INTERNAL_URL: http://api:8000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN in .env}
     networks: [edge, app]
 
   api:
@@ -57,6 +57,11 @@ services:
       TZ: ${TZ:-America/Sao_Paulo}
       DATABASE_URL: postgresql://${POSTGRES_USER:-imobos}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-imobos}
       REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}@redis:6379/0
+      # Users and approval (ADR 0007). The token authenticates the web app on /internal/*.
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN in .env}
+      IMOBOS_ADMIN_EMAILS: ${IMOBOS_ADMIN_EMAILS:?set IMOBOS_ADMIN_EMAILS in .env}
+      IMOBOS_SIGNUP_OPEN: ${IMOBOS_SIGNUP_OPEN:-true}
+      IMOBOS_MAX_PENDING: ${IMOBOS_MAX_PENDING:-10}
     depends_on:
       postgres:
         condition: service_healthy

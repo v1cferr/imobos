@@ -29,8 +29,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt", maxAge: SESSION_MAX_AGE_SECONDS, updateAge: 24 * 60 * 60 },
   pages: { signIn: "/login", error: "/login" },
   callbacks: {
-    signIn({ account, profile }) {
-      const decision = decideSignIn({ provider: account?.provider, profile });
+    async signIn({ account, profile }) {
+      const decision = await decideSignIn({ provider: account?.provider, profile });
+      if (decision.allowed === "pending") {
+        // A request now waits for an admin. No session is created; the page says so.
+        logAuthEvent("auth.login.pending", { id: identityHash(profile?.email) });
+        return "/login?status=pending";
+      }
       if (!decision.allowed) {
         logAuthEvent("auth.login.denied", {
           reason: decision.reason,

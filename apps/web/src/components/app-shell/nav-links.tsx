@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
-import { MAIN_NAV, SECONDARY_NAV } from "./nav-items";
+import { ADMIN_NAV, MAIN_NAV, SECONDARY_NAV } from "./nav-items";
 
 // Icons are components, which cannot cross from a Server to a Client Component as props, so the
 // lists are imported here and callers only name the group.
-const GROUPS = { main: MAIN_NAV, secondary: SECONDARY_NAV } as const;
+const GROUPS = { main: MAIN_NAV, secondary: SECONDARY_NAV, admin: ADMIN_NAV } as const;
 
 type NavLinksProps = {
   group: keyof typeof GROUPS;

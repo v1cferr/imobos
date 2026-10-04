@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 
-export type AuthEvent = "auth.login.success" | "auth.login.denied" | "auth.logout" | "auth.error";
+export type AuthEvent =
+  | "auth.login.success"
+  | "auth.login.pending"
+  | "auth.login.denied"
+  | "auth.logout"
+  | "auth.error";
 
 /**
  * A short, stable pseudonym for an email: enough to tell "the same person again" apart in logs

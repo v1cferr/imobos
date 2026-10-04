@@ -55,6 +55,7 @@ jobs:
               -e 's/^AUTH_GOOGLE_ID=$/AUTH_GOOGLE_ID=ci/' \
               -e 's/^AUTH_GOOGLE_SECRET=$/AUTH_GOOGLE_SECRET=ci/' \
               -e 's/^IMOBOS_ADMIN_EMAILS=$/IMOBOS_ADMIN_EMAILS=ci@ci.invalid/' \
+              -e 's/^INTERNAL_API_TOKEN=$/INTERNAL_API_TOKEN=ci/' \
               .env.example > .env
 
       - name: Compose config
@@ -62,3 +63,11 @@ jobs:
 
       - name: Compose build
         run: docker compose build
+
+      # The migrations run against the real PostgreSQL image, not only the SQLite used by the tests.
+      - name: Migrations on PostgreSQL
+        run: |
+          docker compose up -d --wait postgres
+          docker compose run --rm --no-deps api alembic upgrade head
+          docker compose run --rm --no-deps api alembic check
+          docker compose down -v

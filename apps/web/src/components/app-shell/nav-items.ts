@@ -5,6 +5,7 @@ import {
   Plug,
   Settings,
   Sun,
+  UserCog,
   Users,
 } from "lucide-react";
 
@@ -20,4 +21,9 @@ export const MAIN_NAV: readonly NavItem[] = [
 
 export const SECONDARY_NAV: readonly NavItem[] = [
   { href: "/settings", label: "Configurações", icon: Settings },
+];
+
+/** Only rendered for admins; the screens themselves check the role again on the server. */
+export const ADMIN_NAV: readonly NavItem[] = [
+  { href: "/admin/users", label: "Usuários", icon: UserCog },
 ];
