@@ -49,6 +49,12 @@ git pull --ff-only
 docker compose up -d --build
 ```
 
+A change to `infrastructure/caddy/Caddyfile` needs a reload after the pull:
+`docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+
+Never run `git pull` in a shell with a restrictive `umask` (for example right after writing
+`.env` with `umask 077`): new files would be created unreadable to the containers' users.
+
 ## Verify
 
 ```bash

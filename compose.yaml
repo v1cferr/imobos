@@ -21,7 +21,9 @@ services:
       BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
       BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
     volumes:
-      - ./infrastructure/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The directory, not the file: git replaces Caddyfile with a new inode on pull, and a single-
+      # file bind mount would keep showing the old one, so `caddy reload` would reload nothing.
+      - ./infrastructure/caddy:/etc/caddy:ro
       - caddy_data:/data # certificates and ACME account: losing it means re-issuing
       - caddy_config:/config
     depends_on:
