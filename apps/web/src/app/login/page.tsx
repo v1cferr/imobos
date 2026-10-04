@@ -1,4 +1,5 @@
 import { CircleAlert, Clock, House } from "lucide-react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -7,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getCurrentUser } from "@/lib/auth/session";
 
 import { signInWithGoogle } from "./actions";
+
+export const metadata: Metadata = { title: "Entrar" };
 
 // Auth.js reports why a sign-in failed through ?error=. Unknown codes get the generic message,
 // and the denial never says which account WOULD be accepted.

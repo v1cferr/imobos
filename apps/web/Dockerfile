@@ -12,6 +12,9 @@ COPY apps/web/package.json apps/web/
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --filter @imobos/web...
 COPY apps/web apps/web
+# The public origin, for absolute link-preview URLs in pages prerendered at build time.
+ARG SITE_URL=http://localhost:3000
+ENV SITE_URL=$SITE_URL
 RUN pnpm --filter @imobos/web build
 
 FROM node:24-slim AS runtime

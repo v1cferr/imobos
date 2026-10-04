@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Privacidade · ImobOS" };
+export const metadata: Metadata = { title: "Privacidade" };
 
 // Public on purpose (Google requires it to publish the sign-in app): it is outside the proxy and
 // the only page Caddy serves without basic auth. It must never read the session.

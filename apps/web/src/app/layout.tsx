@@ -16,9 +16,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION = "Seus clientes e retornos do dia, num lugar só.";
+
+// SITE_URL is the public origin, passed to the image build (compose build arg). Static pages
+// resolve their metadata at build time, so it cannot wait for the runtime environment.
 export const metadata: Metadata = {
-  title: "ImobOS",
-  description: "Sistema operacional da corretora: quem precisa de atenção hoje e por quê.",
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
+  title: { default: "ImobOS", template: "%s · ImobOS" },
+  description: DESCRIPTION,
+  applicationName: "ImobOS",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "ImobOS",
+    title: "ImobOS",
+    description: DESCRIPTION,
+    url: "/",
+  },
+  twitter: { card: "summary_large_image", title: "ImobOS", description: DESCRIPTION },
+  // A private tool: link previews yes, search engines no (Caddy also sends X-Robots-Tag).
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

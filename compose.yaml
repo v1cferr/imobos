@@ -33,6 +33,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        SITE_URL: https://${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
     image: imobos/web:local
     restart: unless-stopped
     environment:
