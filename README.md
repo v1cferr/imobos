@@ -73,6 +73,7 @@ infrastructure/
 docs/
   adr/               architecture decision records
   operations/        production host, deploy and backup runbooks
+  integrations/      one page per connected service (Google Calendar, HubSpot, Chatwoot channels)
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)
 pnpm-workspace.yaml  workspaces: apps/*, packages/*
@@ -90,6 +91,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0005. One edge, segmented networks, basic auth until there is a login](docs/adr/0005-edge-and-network-segmentation.md)
 - [0006. Google identity through Auth.js, a stateless session and an allowlist](docs/adr/0006-authentication-google-identity.md)
 - [0007. Open sign-up with admin approval, owned by the API](docs/adr/0007-sign-up-with-admin-approval.md)
+- [0008. Connected accounts: OAuth in the web, tokens only in the API, encrypted at rest](docs/adr/0008-connected-accounts.md)
 
 ## Secrets
 

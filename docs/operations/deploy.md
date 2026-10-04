@@ -33,6 +33,9 @@ Fill `.env`:
 - `IMOBOS_SIGNUP_OPEN` (`true`/`false`) and `IMOBOS_MAX_PENDING`: whether unknown accounts may
   request access, and how many requests may wait. Close sign-up once the expected users are in.
 - `INTERNAL_API_TOKEN`: generated on the host, `openssl rand -hex 32`; shared by web and api.
+- Optional, for connected accounts (ADR 0008): `IMOBOS_TOKEN_KEYS` and the
+  `GOOGLE_INTEGRATIONS_CLIENT_*` pair; without them the integrations screen shows the services as
+  unavailable. See [`../integrations/`](../integrations/google-calendar.md).
 
 ```bash
 docker compose up -d --build
