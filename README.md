@@ -57,7 +57,8 @@ docker compose up -d
 
 `docker compose` refuses to start while a required value in `.env` is empty. Only Caddy publishes
 ports (80/443), the application authenticates with Google and an admin approves who enters, and the
-databases live on an internal network that only the API reaches. See
+databases live on an internal network that only the API reaches. Chatwoot runs beside it with its own
+databases and networks ([ADR 0009](docs/adr/0009-chatwoot-self-hosted.md)). See
 [ADR 0005](docs/adr/0005-edge-and-network-segmentation.md) and
 [the deploy runbook](docs/operations/deploy.md).
 
@@ -69,10 +70,11 @@ apps/
   api/               FastAPI on Python 3.13, managed by uv; owns the database (Alembic)
 infrastructure/
   caddy/             the edge: TLS and security headers
+  chatwoot/          Chatwoot bootstrap (account and super admin before the route exists)
   backup/            nightly pg_dump + restic off-site, restore drill, systemd timer
 docs/
   adr/               architecture decision records
-  operations/        production host, deploy and backup runbooks
+  operations/        production host, deploy, backup and Chatwoot runbooks
   integrations/      one page per connected service (Google Calendar, HubSpot, Chatwoot channels)
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)
@@ -92,6 +94,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0006. Google identity through Auth.js, a stateless session and an allowlist](docs/adr/0006-authentication-google-identity.md)
 - [0007. Open sign-up with admin approval, owned by the API](docs/adr/0007-sign-up-with-admin-approval.md)
 - [0008. Connected accounts: OAuth in the web, tokens only in the API, encrypted at rest](docs/adr/0008-connected-accounts.md)
+- [0009. Chatwoot self-hosted beside ImobOS, isolated, at its own subdomain](docs/adr/0009-chatwoot-self-hosted.md)
 
 ## Secrets
 

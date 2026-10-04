@@ -1,23 +1,26 @@
 # Backup and restore
 
-What protects ImobOS's data, how to install it on the host, and how to get the data back. Card:
-V1C-88. Everything here runs as root on the production host ([vps.md](vps.md)).
+What protects ImobOS's data, how to install it on the host, and how to get the data back. Cards:
+V1C-88, V1C-94 (Chatwoot). Everything here runs as root on the production host ([vps.md](vps.md)).
 
 ## What is backed up
 
-- **PostgreSQL**, as a `pg_dump` in custom format (compressed, restorable table by table).
-- Uploads do not exist yet; when they do, their volume joins the same restic repository.
+- **Both PostgreSQL databases** (ImobOS and Chatwoot), each as a `pg_dump` in custom format
+  (compressed, restorable table by table).
+- **Chatwoot's attachments**, the `imobos_chatwoot_storage` volume, as its own restic series.
 
-Redis is not backed up: it holds nothing that cannot be rebuilt.
+Redis is not backed up: neither instance holds anything that cannot be rebuilt.
 
 ## How it works
 
 1. `imobos-backup.timer` runs daily at 03:00 (host time), plus a random delay of up to 15 minutes;
    a run missed while the host was down happens at the next boot.
-2. `infrastructure/backup/imobos-backup.sh` dumps the database to `/var/backups/imobos` (root,
-   mode 700), checks the dump with `pg_restore --list`, and keeps 7 days locally.
-3. restic (`restic/restic:0.19.1`, in a container) sends that directory to the off-site repository,
-   **encrypted before it leaves the host**, then keeps 7 daily, 4 weekly and 6 monthly snapshots.
+2. `infrastructure/backup/imobos-backup.sh` dumps both databases to `/var/backups/imobos` (root,
+   mode 700, `imobos-*.dump` and `chatwoot-*.dump`), checks each dump with `pg_restore --list`, and
+   keeps 7 days locally.
+3. restic (`restic/restic:0.19.1`, in a container) sends that directory (tag `imobos-db`) and the
+   attachments volume (tag `chatwoot-storage`) to the off-site repository, **encrypted before it
+   leaves the host**, then keeps 7 daily, 4 weekly and 6 monthly snapshots of each.
    On Sundays it also reads back 10% of the stored data (`restic check --read-data-subset`) and
    runs the restore drill below.
 4. Every run reports start, success or failure to healthchecks.io (`HC_PING_URL`). A run that
@@ -67,8 +70,9 @@ sudo docker run --rm --env-file /etc/imobos/backup.env restic/restic:0.19.1 snap
 sudo /srv/imobos/infrastructure/backup/imobos-restore-check.sh
 ```
 
-It takes the latest snapshot from the off-site repository, restores it into a throwaway
-PostgreSQL container and compares row counts with production. It never touches the live
+It takes the latest snapshots from the off-site repository, restores each dump into a throwaway
+PostgreSQL container (pgvector for Chatwoot), compares user counts with production, and restores
+the attachments. It never touches the live
 database, and it reads the repository without locking it.
 
 ## Real restore (the database is lost)
@@ -86,3 +90,8 @@ docker compose up -d
 ```
 
 `restore latest` can be replaced by a snapshot id from `restic snapshots` to go back further.
+
+Chatwoot is the same procedure with `chatwoot-postgres` and a `chatwoot-<stamp>.dump`. Its
+attachments come back with `restore latest --tag chatwoot-storage` and are copied into the
+`imobos_chatwoot_storage` volume. A restored Chatwoot database needs the same Rails keys in `.env`
+(password manager item "ImobOS Chatwoot").

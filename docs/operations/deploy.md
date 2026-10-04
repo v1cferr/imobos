@@ -36,6 +36,8 @@ Fill `.env`:
 - Optional, for connected accounts (ADR 0008): `IMOBOS_TOKEN_KEYS` and the
   `GOOGLE_INTEGRATIONS_CLIENT_*` pair; without them the integrations screen shows the services as
   unavailable. See [`../integrations/`](../integrations/google-calendar.md).
+- `CHATWOOT_*`: Chatwoot has its own first-install order, because its onboarding page must be
+  closed before it is public. Follow [chatwoot.md](chatwoot.md).
 
 ```bash
 docker compose up -d --build
@@ -75,6 +77,7 @@ it. Without a session, every screen redirects to `/login` and every API route an
 ## Data
 
 PostgreSQL and Redis keep their state in the named volumes `imobos_postgres_data` and
-`imobos_redis_data`; certificates live in `imobos_caddy_data`. `docker compose down` keeps them.
-**`docker compose down -v` deletes them**; the database is backed up nightly off the host
-([backup.md](backup.md)).
+`imobos_redis_data`, Chatwoot in `imobos_chatwoot_postgres_data`, `imobos_chatwoot_redis_data` and
+`imobos_chatwoot_storage`; certificates live in `imobos_caddy_data`. `docker compose down` keeps
+them. **`docker compose down -v` deletes them**; the databases and attachments are backed up nightly
+off the host ([backup.md](backup.md)).

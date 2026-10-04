@@ -11,5 +11,5 @@ Chatwoot's API instead. Owning a channel in two places would duplicate messages 
 | Facebook / Messenger | Chatwoot Facebook inbox (Meta login) | Same Meta app as Instagram. |
 | Gmail | Chatwoot e-mail inbox (Google OAuth in Chatwoot) | Only if e-mail becomes a conversation channel; a direct Gmail API in ImobOS only if a feature needs it. |
 
-Validation happens in the Chatwoot card: deploying Chatwoot, creating the Meta app, and connecting
-each inbox with the broker present.
+Chatwoot itself is deployed (V1C-94, [ADR 0009](../adr/0009-chatwoot-self-hosted.md),
+[runbook](../operations/chatwoot.md)). Each inbox is connected with the broker present.
