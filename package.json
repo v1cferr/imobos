@@ -4,8 +4,9 @@
   "description": "ImobOS monorepo root: every check runs from here across all workspaces.",
   "scripts": {
     "dev": "pnpm --recursive --parallel dev",
-    "lint": "pnpm --recursive lint && pnpm lint:docs",
+    "lint": "pnpm --recursive lint && pnpm lint:docs && pnpm lint:shell",
     "lint:docs": "markdownlint-cli2",
+    "lint:shell": "shellcheck infrastructure/backup/*.sh",
     "typecheck": "pnpm --recursive typecheck",
     "test": "pnpm --recursive test",
     "build": "pnpm --recursive build",

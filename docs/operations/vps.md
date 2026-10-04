@@ -19,7 +19,8 @@ this page is the reference, not a runbook to repeat.
 /srv/imobos/          this repository, cloned over HTTPS, owned by v1cferr
 /srv/imobos/.env      secrets, mode 600, never committed
 Docker named volumes  service state (databases, certificates, uploads)
-/var/backups/imobos/  database dumps, root-only, shipped off the host by a backup job
+/var/backups/imobos/  database dumps, root-only, shipped off the host by restic (backup.md)
+/etc/imobos/          backup secrets (backup.env), root-only
 ```
 
 Code, state and secrets are kept apart because they have different lifecycles: a re-clone or

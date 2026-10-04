@@ -69,9 +69,10 @@ apps/
   api/               FastAPI on Python 3.13, managed by uv; owns the database (Alembic)
 infrastructure/
   caddy/             the edge: TLS and security headers
+  backup/            nightly pg_dump + restic off-site, restore drill, systemd timer
 docs/
   adr/               architecture decision records
-  operations/        production host and deploy runbook
+  operations/        production host, deploy and backup runbooks
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)
 pnpm-workspace.yaml  workspaces: apps/*, packages/*

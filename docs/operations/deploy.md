@@ -73,4 +73,5 @@ it. Without a session, every screen redirects to `/login` and every API route an
 
 PostgreSQL and Redis keep their state in the named volumes `imobos_postgres_data` and
 `imobos_redis_data`; certificates live in `imobos_caddy_data`. `docker compose down` keeps them.
-**`docker compose down -v` deletes them**, and there is no backup yet (V1C-88).
+**`docker compose down -v` deletes them**; the database is backed up nightly off the host
+([backup.md](backup.md)).
