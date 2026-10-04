@@ -3,6 +3,7 @@
 export { auth as proxy } from "@/auth";
 
 export const config = {
-  // API routes answer 401 themselves instead of redirecting; Auth.js owns /api/auth.
-  matcher: ["/((?!api|login|_next/static|_next/image|favicon.ico).*)"],
+  // API routes answer 401 themselves instead of redirecting; Auth.js owns /api/auth; /privacidade
+  // is public by design.
+  matcher: ["/((?!api|login|privacidade|_next/static|_next/image|favicon.ico).*)"],
 };
