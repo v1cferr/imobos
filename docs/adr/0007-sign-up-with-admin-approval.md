@@ -40,11 +40,13 @@ validates its input (UUID, role) before calling the api.
 states what is kept, why, for how long and how to ask for deletion.
 
 **Publishing the OAuth app.** Google only admits test users until the app is published, and
-publishing requires a public privacy policy. So Caddy's basic auth exempts exactly `/privacidade`,
-`/_next/static/*` and `/favicon.ico` (build assets, nothing user-specific).
+publishing requires a public privacy policy, served at `/privacidade`.
 
-**Cutover.** Basic auth stays until the broker signs up, is approved and validates; then sign-up is
-closed (`IMOBOS_SIGNUP_OPEN=false`) and only then basic auth is removed.
+**Cutover (amended 2026-10-04 by the owner).** The plan was: the broker signs up and is approved,
+sign-up closes, then basic auth goes. The owner removed basic auth first and **kept sign-up open**:
+the approval gate is the barrier, an unapproved account sees no screen and gets only a pending
+request, and `IMOBOS_MAX_PENDING` bounds what strangers can store. Caddy no longer authenticates
+anything; the application does.
 
 ## Consequences
 
@@ -53,5 +55,6 @@ closed (`IMOBOS_SIGNUP_OPEN=false`) and only then basic auth is removed.
   negligible, and it is what makes disabling immediate.
 - The users table has no backup yet (V1C-88). Losing it only means approving people again, and it
   holds no customer data, so this was accepted before the backup.
-- With basic auth gone and sign-up open, anyone could fill the pending queue; the cap and closing
-  sign-up are the guard, and a rate limit at the edge is the next step if that ever happens.
+- With sign-up open and no basic auth, anyone can fill the pending queue: at the cap, new requests
+  (including a legitimate one) get "full" until an admin rejects the junk. The remedies, in order:
+  reject pending requests, set `IMOBOS_SIGNUP_OPEN=false`, add a rate limit at the edge.

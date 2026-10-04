@@ -18,8 +18,6 @@ services:
     environment:
       IMOBOS_DOMAIN: ${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
       ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
-      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
-      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
     volumes:
       # The directory, not the file: git replaces Caddyfile with a new inode on pull, and a single-
       # file bind mount would keep showing the old one, so `caddy reload` would reload nothing.

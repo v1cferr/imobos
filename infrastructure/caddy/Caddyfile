@@ -17,13 +17,7 @@
 		-Server
 	}
 
-	# Basic auth in front of everything except the privacy page Google requires to be public, and
-	# the static assets that page loads (build output, nothing user-specific). It goes away at the
-	# V1C-90 cutover. OAuth callbacks and webhooks (V1C-85) get exact paths, never /api/* whole.
-	@private not path /privacidade /_next/static/* /favicon.ico
-	basic_auth @private {
-		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
-	}
-
+	# No basic auth since V1C-90: the application authenticates (Google) and an admin approves who
+	# enters (ADR 0007). OAuth callbacks and webhooks (V1C-85) get exact paths, never /api/* whole.
 	reverse_proxy web:3000
 }

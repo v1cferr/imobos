@@ -20,9 +20,7 @@ cp .env.example .env && chmod 600 .env
 
 Fill `.env`:
 
-- `IMOBOS_DOMAIN`, `ACME_EMAIL`, `BASIC_AUTH_USER`.
-- `BASIC_AUTH_HASH`: the bcrypt hash of a password kept in the password manager, in single quotes:
-  `docker run --rm caddy:2.11.6-alpine caddy hash-password --plaintext '<password>'`.
+- `IMOBOS_DOMAIN`, `ACME_EMAIL`.
 - `POSTGRES_PASSWORD`, `REDIS_PASSWORD`: generated on the host and never copied anywhere else,
   e.g. `openssl rand -hex 32`.
 - `AUTH_SECRET`: generated on the host, `openssl rand -base64 33`. Rotating it signs everyone out.
@@ -68,7 +66,8 @@ docker compose exec api alembic current          # the schema revision in use
 
 Then in a browser: an admin lands on `/today`; a new account sees "pedido de acesso enviado" and
 appears on `/admin/users`; once approved it enters; a refresh keeps the session, and "Sair" ends
-it. `https://<domain>/privacidade` must load without basic auth, and nothing else may.
+it. Without a session, every screen redirects to `/login` and every API route answers 401; only
+`/login`, `/privacidade`, `/api/auth/*` and `/api/health` are public.
 
 ## Data
 

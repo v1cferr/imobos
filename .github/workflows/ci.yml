@@ -47,8 +47,6 @@ jobs:
         run: |
           sed -e 's/^IMOBOS_DOMAIN=$/IMOBOS_DOMAIN=ci.invalid/' \
               -e 's/^ACME_EMAIL=$/ACME_EMAIL=ci@ci.invalid/' \
-              -e 's/^BASIC_AUTH_USER=$/BASIC_AUTH_USER=ci/' \
-              -e "s/^BASIC_AUTH_HASH=''$/BASIC_AUTH_HASH='ci-not-a-hash'/" \
               -e 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=ci/' \
               -e 's/^REDIS_PASSWORD=$/REDIS_PASSWORD=ci/' \
               -e 's/^AUTH_SECRET=$/AUTH_SECRET=ci/' \

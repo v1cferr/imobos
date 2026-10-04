@@ -68,7 +68,7 @@ apps/
   web/               Next.js (App Router), TypeScript, Tailwind, shadcn/ui, Lucide
   api/               FastAPI on Python 3.13, managed by uv; owns the database (Alembic)
 infrastructure/
-  caddy/             the edge: TLS, basic auth, security headers
+  caddy/             the edge: TLS and security headers
 docs/
   adr/               architecture decision records
   operations/        production host and deploy runbook
