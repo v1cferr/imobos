@@ -6,7 +6,7 @@
     "dev": "pnpm --recursive --parallel dev",
     "lint": "pnpm --recursive lint && pnpm lint:docs && pnpm lint:shell",
     "lint:docs": "markdownlint-cli2",
-    "lint:shell": "shellcheck infrastructure/backup/*.sh",
+    "lint:shell": "shellcheck infrastructure/*/*.sh",
     "typecheck": "pnpm --recursive typecheck",
     "test": "pnpm --recursive test",
     "build": "pnpm --recursive build",
