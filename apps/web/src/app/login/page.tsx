@@ -1,4 +1,4 @@
-import { CircleAlert, Clock, House } from "lucide-react";
+import { CircleAlert, Clock, KeyRound } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <House aria-hidden className="size-6" />
+            <KeyRound aria-hidden className="size-6" />
           </div>
           <CardTitle className="text-2xl">ImobOS</CardTitle>
           <CardDescription>Seus clientes e retornos do dia, num lugar só.</CardDescription>

@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { KeyMark } from "@/components/brand/key-mark";
+
 // The link preview (WhatsApp, Telegram, e-mail). Built once at build time, public by design.
 export const alt = "ImobOS: seus clientes e retornos do dia, num lugar só.";
 export const size = { width: 1200, height: 630 };
@@ -36,14 +38,7 @@ export default function OpengraphImage() {
               justifyContent: "center",
             }}
           >
-            {/* The app's house, solid, as on the favicon. */}
-            <svg width="72" height="72" viewBox="14 14 36 36">
-              <path
-                fill={INK}
-                fillRule="evenodd"
-                d="M14 29.5a3 3 0 0 1 1.06-2.29l15-12.86a3 3 0 0 1 3.88 0l15 12.86A3 3 0 0 1 50 29.5V47a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z M28 50V38.5a1.5 1.5 0 0 1 1.5-1.5h5a1.5 1.5 0 0 1 1.5 1.5V50z"
-              />
-            </svg>
+            <KeyMark size={72} color={INK} stroke={2.2} />
           </div>
           <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: -2 }}>ImobOS</div>
         </div>

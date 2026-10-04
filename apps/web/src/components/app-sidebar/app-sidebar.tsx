@@ -1,6 +1,6 @@
 "use client";
 
-import { House } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -58,7 +58,7 @@ export function AppSidebar({ user }: { user: CurrentUser }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/today" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <House aria-hidden className="size-4" />
+                <KeyRound aria-hidden className="size-4" />
               </div>
               <span className="text-base font-semibold">ImobOS</span>
             </SidebarMenuButton>
