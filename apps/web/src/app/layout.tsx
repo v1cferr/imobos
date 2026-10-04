@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { Suspense } from "react";
+
+import { FlashToast } from "@/components/flash-toast";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
@@ -49,7 +53,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <Toaster>
+              {children}
+              {/* useSearchParams needs a Suspense boundary to keep pages prerenderable. */}
+              <Suspense>
+                <FlashToast />
+              </Suspense>
+            </Toaster>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
