@@ -22,6 +22,9 @@ COPY src ./src
 COPY migrations ./migrations
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
+# COPY keeps the host's file modes; a checkout made under umask 077 would leave the code unreadable
+# to the unprivileged user below (it took the API down once). Readability is the image's job.
+RUN chmod a+r pyproject.toml uv.lock alembic.ini && chmod -R a+rX src migrations
 
 RUN useradd --system --uid 10001 --no-create-home imobos
 USER imobos
