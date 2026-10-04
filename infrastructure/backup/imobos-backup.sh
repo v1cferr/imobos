@@ -60,10 +60,13 @@ log "restic backup"
 restic backup /data --tag imobos-db --exclude '*.partial'
 restic forget --tag imobos-db --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
 
-# Once a week, read back a slice of the stored data: a repository nobody reads is a hope.
+# Once a week, prove the backup restores: read back a slice of the stored data, then restore the
+# latest snapshot into a throwaway PostgreSQL. A failure here alerts like any other.
 if [ "$(date +%u)" = 7 ]; then
   log "weekly restic check"
   restic check --read-data-subset=10%
+  log "weekly restore drill"
+  IMOBOS_BACKUP_ENV="$ENV_FILE" "$(dirname "$0")/imobos-restore-check.sh"
 fi
 
 ping "" "ok $stamp"

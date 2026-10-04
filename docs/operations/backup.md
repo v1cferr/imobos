@@ -18,7 +18,8 @@ Redis is not backed up: it holds nothing that cannot be rebuilt.
    mode 700), checks the dump with `pg_restore --list`, and keeps 7 days locally.
 3. restic (`restic/restic:0.19.1`, in a container) sends that directory to the off-site repository,
    **encrypted before it leaves the host**, then keeps 7 daily, 4 weekly and 6 monthly snapshots.
-   On Sundays it also reads back 10% of the stored data (`restic check --read-data-subset`).
+   On Sundays it also reads back 10% of the stored data (`restic check --read-data-subset`) and
+   runs the restore drill below.
 4. Every run reports start, success or failure to healthchecks.io (`HC_PING_URL`). A run that
    fails, or never happens, raises an alert there.
 
@@ -60,7 +61,7 @@ journalctl -u imobos-backup.service -n 50          # the last run's log
 sudo docker run --rm --env-file /etc/imobos/backup.env restic/restic:0.19.1 snapshots
 ```
 
-## Restore drill (monthly, and after any change here)
+## Restore drill (weekly by the timer, and by hand after any change here)
 
 ```bash
 sudo /srv/imobos/infrastructure/backup/imobos-restore-check.sh
