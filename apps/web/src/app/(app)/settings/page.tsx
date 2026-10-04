@@ -1,11 +1,12 @@
 import { LogOut } from "lucide-react";
 
-import { initials } from "@/components/app-shell/user-panel";
+import { ThemeSelect } from "@/components/theme-select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/session";
+import { initials } from "@/lib/initials";
 
 import { logout } from "../actions";
 
@@ -40,6 +41,17 @@ export default async function SettingsPage() {
               Sair
             </Button>
           </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Aparência</CardTitle>
+          <CardDescription>
+            No automático, o ImobOS fica claro ou escuro junto com o seu celular ou computador.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeSelect />
         </CardContent>
       </Card>
     </div>

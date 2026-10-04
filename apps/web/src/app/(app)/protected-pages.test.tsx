@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { requireUserMock, requireAdminMock, listUsersMock } = vi.hoisted(() => ({
@@ -20,6 +20,7 @@ vi.mock("./admin/users/actions", () => ({
   setRole: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/today" }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 
 import AdminUsersPage from "./admin/users/page";
 import CalendarPage from "./calendar/page";
@@ -60,16 +61,19 @@ describe("protected screens", () => {
     for (const label of ["Hoje", "Leads", "Conversas", "Agenda", "Integrações", "Configurações"]) {
       expect(screen.getByRole("link", { name: label })).toBeDefined();
     }
-    expect(screen.getByRole("link", { name: "Hoje" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByText("Ana Paula")).toBeDefined();
-    expect(screen.getByRole("button", { name: "Sair" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Hoje" }).hasAttribute("data-active")).toBe(true);
+    expect(screen.getByRole("link", { name: "Leads" }).hasAttribute("data-active")).toBe(false);
+    const userMenu = screen.getByRole("button", { name: /Ana Paula/ });
+    fireEvent.click(userMenu);
+    expect(await screen.findByRole("menuitem", { name: "Sair" })).toBeDefined();
+    expect(screen.getByRole("menuitemradio", { name: "Automático" })).toBeDefined();
   });
 
   it("only an admin sees the Administrador label", async () => {
     render(await AppLayout({ children: null, params: Promise.resolve({}) }));
     expect(screen.queryByText("Administrador")).toBeNull();
     requireUserMock.mockResolvedValue({ ...USER, role: "admin" });
-    render(await SettingsPage());
+    render(await AppLayout({ children: null, params: Promise.resolve({}) }));
     expect(screen.getAllByText("Administrador").length).toBeGreaterThan(0);
   });
 

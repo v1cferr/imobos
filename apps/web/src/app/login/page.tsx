@@ -1,6 +1,7 @@
-import { House } from "lucide-react";
+import { CircleAlert, Clock, House } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -34,15 +35,19 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {pending && (
-            <p role="status" className="rounded-md bg-muted p-3 text-sm">
-              Pedido de acesso enviado. Assim que o administrador aprovar, é só entrar de novo com
-              a mesma conta Google.
-            </p>
+            <Alert role="status">
+              <Clock aria-hidden />
+              <AlertDescription>
+                Pedido de acesso enviado. Assim que o administrador aprovar, é só entrar de novo com
+                a mesma conta Google.
+              </AlertDescription>
+            </Alert>
           )}
           {message && (
-            <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {message}
-            </p>
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden />
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
           )}
           <form action={signInWithGoogle}>
             <Button type="submit" size="lg" className="w-full">

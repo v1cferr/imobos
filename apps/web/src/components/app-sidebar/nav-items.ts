@@ -17,9 +17,6 @@ export const MAIN_NAV: readonly NavItem[] = [
   { href: "/conversations", label: "Conversas", icon: MessagesSquare },
   { href: "/calendar", label: "Agenda", icon: CalendarDays },
   { href: "/integrations", label: "Integrações", icon: Plug },
-];
-
-export const SECONDARY_NAV: readonly NavItem[] = [
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
