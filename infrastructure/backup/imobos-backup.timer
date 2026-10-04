@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily ImobOS backup
+
+[Timer]
+# 03:00 in the host's timezone (America/Sao_Paulo), when nobody is working.
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=15min
+# A run missed while the host was down happens at the next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

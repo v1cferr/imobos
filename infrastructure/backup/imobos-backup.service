@@ -1,0 +1,12 @@
+[Unit]
+Description=ImobOS backup: pg_dump, then restic to the off-site repository
+Documentation=file:///srv/imobos/docs/operations/backup.md
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/srv/imobos/infrastructure/backup/imobos-backup.sh
+# A backup should never compete with the broker's requests.
+Nice=10
+IOSchedulingClass=idle
