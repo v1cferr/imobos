@@ -1,12 +1,12 @@
 # ImobOS
 
 The operating system of a real estate broker: one place that answers **who needs attention today,
-why, and what the next action should be**. HubSpot stays the CRM, Chatwoot centralizes the
-conversation channels (WhatsApp Business through the official Meta API), and ImobOS orchestrates
-follow-ups, AI-assisted replies with human review, and daily priorities on top of them.
+why, and what the next action should be**. ImobOS is her CRM (clients, sales and rentals funnels,
+history), Chatwoot centralizes the conversation channels (WhatsApp Business through the official
+Meta API), and ImobOS adds follow-ups, AI-assisted replies with human review, and daily priorities.
 
-Status: **authenticated shell**. Sign-in with Google, open sign-up with admin approval and the
-navigation are in place, with example data only; integrations come next.
+Status: **in production, CRM next**. Sign-in with Google and admin approval, Google Calendar
+connection, Chatwoot and nightly off-site backups are live; the CRM core (V1C-109) is being built.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ infrastructure/
 docs/
   adr/               architecture decision records
   operations/        production host, deploy, backup and Chatwoot runbooks
-  integrations/      one page per connected service (Google Calendar, HubSpot, Chatwoot channels)
+  integrations/      one page per connected service (Google Calendar, Chatwoot channels)
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)
 pnpm-workspace.yaml  workspaces: apps/*, packages/*
@@ -95,6 +95,7 @@ pnpm-workspace.yaml  workspaces: apps/*, packages/*
 - [0007. Open sign-up with admin approval, owned by the API](docs/adr/0007-sign-up-with-admin-approval.md)
 - [0008. Connected accounts: OAuth in the web, tokens only in the API, encrypted at rest](docs/adr/0008-connected-accounts.md)
 - [0009. Chatwoot self-hosted beside ImobOS, isolated, at its own subdomain](docs/adr/0009-chatwoot-self-hosted.md)
+- [0010. ImobOS is the broker's CRM](docs/adr/0010-imobos-is-the-crm.md)
 
 ## Secrets
 

@@ -29,8 +29,8 @@ export default async function TodayPage() {
       </div>
 
       <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-        Estes são <strong>dados de exemplo</strong>. Seus clientes de verdade aparecem aqui quando o
-        HubSpot for conectado.
+        Estes são <strong>dados de exemplo</strong>. Seus clientes de verdade aparecem aqui assim que
+        você cadastrar o primeiro.
       </p>
 
       <section aria-label="Resumo do dia" className="grid gap-3 sm:grid-cols-3">

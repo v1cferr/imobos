@@ -21,8 +21,7 @@ export default async function LeadsPage() {
           </EmptyMedia>
           <EmptyTitle>Nenhum lead por aqui ainda</EmptyTitle>
           <EmptyDescription>
-            Quando o HubSpot for conectado, seus leads aparecem aqui, com quem precisa de atenção
-            primeiro.
+            Seus clientes e leads vão aparecer aqui, com quem precisa de atenção primeiro.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

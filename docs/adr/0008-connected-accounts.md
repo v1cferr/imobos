@@ -47,5 +47,5 @@ connected in Chatwoot; ImobOS never holds their tokens. See `docs/integrations/`
   "unverified app" warning (accepted by the owner, up to 100 users).
 - A lost `IMOBOS_TOKEN_KEYS` only means reconnecting each service; a leaked database without it
   exposes no token.
-- HubSpot is modelled but on hold: the broker's HubSpot belongs to the construtora, whose Super
-  Admin must authorize an app that would see the whole account (V1C-85).
+- HubSpot was modelled but on hold, then removed on 16/10: the construtora owns it and will not
+  authorize an app ([ADR 0010](0010-imobos-is-the-crm.md)).

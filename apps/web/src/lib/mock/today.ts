@@ -1,6 +1,6 @@
 /**
  * FIXTURE, not customer data. No real client may enter ImobOS before backups exist (V1C-88); the
- * real list comes from HubSpot (V1C-85 and later). Every name here is fictional.
+ * real list comes from the ImobOS CRM (V1C-109, V1C-111). Every name here is fictional.
  */
 export type Priority = { id: string; name: string; reason: string; detail: string };
 
