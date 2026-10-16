@@ -36,7 +36,6 @@ def _enum(kind: type[enum.StrEnum], name: str) -> Enum:
 
 class Provider(enum.StrEnum):
     GOOGLE_CALENDAR = "google_calendar"
-    HUBSPOT = "hubspot"
 
 
 class ConnectionStatus(enum.StrEnum):

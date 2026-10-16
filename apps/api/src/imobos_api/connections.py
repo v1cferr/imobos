@@ -25,7 +25,7 @@ def configured(settings: Settings, provider: Provider) -> bool:
         return False
     if provider is Provider.GOOGLE_CALENDAR:
         return bool(settings.google_client_id and settings.google_client_secret)
-    return False  # HubSpot: on hold (V1C-85), no client yet.
+    return False
 
 
 def _get(session: Session, provider: Provider) -> Connection | None:

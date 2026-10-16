@@ -115,19 +115,6 @@ export default async function IntegrationsPage() {
 
       <GoogleCalendarCard info={byProvider.get("google_calendar")} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>HubSpot</CardTitle>
-          <CardDescription>Seus clientes, negócios e tarefas.</CardDescription>
-          <CardAction>
-            <Badge variant="secondary">Em espera</Badge>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          O HubSpot é da construtora: a conexão depende da autorização do administrador de lá.
-        </CardContent>
-      </Card>
-
       <section aria-labelledby="channels" className="flex flex-col gap-3">
         <h2 id="channels" className="text-xl font-semibold">
           Canais de conversa

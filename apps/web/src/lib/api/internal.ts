@@ -82,7 +82,7 @@ export async function rejectUser(id: string): Promise<void> {
   if (response.status === 404) throw new InternalApiError(404);
 }
 
-export type Provider = "google_calendar" | "hubspot";
+export type Provider = "google_calendar";
 
 /** What the api tells about a connected account. Never carries a token (ADR 0008). */
 export type ConnectionInfo = {

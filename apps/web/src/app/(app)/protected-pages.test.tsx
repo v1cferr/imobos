@@ -126,14 +126,12 @@ describe("protected screens", () => {
     expect(screen.getByText("João Silva")).toBeDefined();
   });
 
-  it("integrations shows the calendar state, HubSpot on hold and the Chatwoot channels", async () => {
+  it("integrations shows the calendar state and the Chatwoot channels", async () => {
     listConnectionsMock.mockResolvedValue([
       { provider: "google_calendar", status: null, available: true, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
-      { provider: "hubspot", status: null, available: false, account: null, connected_by: null, connected_at: null, last_checked_at: null, last_error: null },
     ]);
     render(await IntegrationsPage());
     expect(screen.getByRole("button", { name: "Conectar" })).toBeDefined();
-    expect(screen.getByText("Em espera")).toBeDefined();
     expect(screen.getAllByText("Em breve")).toHaveLength(4);
   });
 

@@ -16,7 +16,7 @@ import {
   packFlow,
 } from "@/lib/integrations/google-oauth";
 
-const PROVIDERS: readonly Provider[] = ["google_calendar", "hubspot"];
+const PROVIDERS: readonly Provider[] = ["google_calendar"];
 
 function provider(form: FormData): Provider {
   const value = form.get("provider");

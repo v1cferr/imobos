@@ -47,7 +47,7 @@ def test_starts_disconnected_and_lists_every_provider(client: TestClient) -> Non
     rows = {r["provider"]: r for r in client.get("/internal/connections").json()}
     assert rows["google_calendar"]["status"] is None
     assert rows["google_calendar"]["available"] is True
-    assert rows["hubspot"]["available"] is False  # on hold
+    assert set(rows) == {"google_calendar"}
 
 
 def test_connect_exchanges_with_pkce_and_shows_the_account(client: TestClient) -> None:
