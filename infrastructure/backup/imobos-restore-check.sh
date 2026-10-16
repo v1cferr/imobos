@@ -28,7 +28,7 @@ restore() {
 restore imobos-db
 restore chatwoot-storage
 
-# drill <file prefix> <postgres image> <compose service> <table>
+# drill <file prefix> <postgres image> <compose service> <table> [tables that must exist...]
 drill() {
   local dump name restored live
   dump="$(find "$work" -name "$1-*.dump" | sort | tail -1)"
@@ -48,8 +48,13 @@ drill() {
   echo "$1 $4: restored=$restored live=$live"
   # The snapshot may be up to a day old, so it may hold fewer rows than production, never zero.
   [ "$restored" -gt 0 ]
+  local table
+  for table in "${@:5}"; do
+    echo "$1 $table: $(docker exec "$name" psql -U postgres -d drill -tA -c "select count(*) from $table") rows"
+  done
 }
-drill imobos postgres:17.11 postgres users
+# The CRM tables (V1C-109) may still be empty, so they only have to come back.
+drill imobos postgres:17.11 postgres users clients deals activities
 # Chatwoot needs pgvector to restore its schema, so the drill uses its image.
 drill chatwoot pgvector/pgvector:0.8.7-pg17 chatwoot-postgres users
 
