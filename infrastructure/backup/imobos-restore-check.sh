@@ -48,9 +48,11 @@ drill() {
   echo "$1 $4: restored=$restored live=$live"
   # The snapshot may be up to a day old, so it may hold fewer rows than production, never zero.
   [ "$restored" -gt 0 ]
-  local table
+  local table count
   for table in "${@:5}"; do
-    echo "$1 $table: $(docker exec "$name" psql -U postgres -d drill -tA -c "select count(*) from $table") rows"
+    # Assigned on its own line: inside echo's arguments a failed query would not stop the drill.
+    count="$(docker exec "$name" psql -U postgres -d drill -tA -c "select count(*) from $table")"
+    echo "$1 $table: $count rows"
   done
 }
 # The CRM tables (V1C-109) may still be empty, so they only have to come back.
