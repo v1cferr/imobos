@@ -36,3 +36,6 @@ __pycache__/
 !.vscode/extensions.json
 .idea/
 .DS_Store
+
+# Private product context (family chat, client data): kept on the hosts, never published.
+docs/tmp/
