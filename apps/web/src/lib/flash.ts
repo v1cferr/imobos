@@ -40,6 +40,18 @@ export const FLASH: Record<string, Flash> = {
   disabled: { type: "info", title: "Acesso desativado" },
   enabled: { type: "success", title: "Acesso reativado" },
   role_changed: { type: "success", title: "Papel alterado" },
+  // CRM
+  client_created: { type: "success", title: "Cliente cadastrado" },
+  client_updated: { type: "success", title: "Dados salvos" },
+  client_deleted: { type: "info", title: "Cliente apagado", description: "Com todo o histórico." },
+  deal_opened: { type: "success", title: "Entrou no funil" },
+  deal_updated: { type: "success", title: "Negócio atualizado" },
+  activity_added: { type: "success", title: "Registrado no histórico" },
+  open_deal_exists: {
+    type: "error",
+    title: "Já existe um negócio aberto nesse funil",
+    description: "Feche o atual (ganho ou perdido) antes de abrir outro.",
+  },
 };
 
 /** The flash for a key, or a generic error for an unknown one (never the raw key). */

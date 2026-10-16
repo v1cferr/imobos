@@ -14,6 +14,15 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock, listConnections: listConnectionsMock }));
 vi.mock("./integrations/actions", () => ({ check: vi.fn(), connectGoogleCalendar: vi.fn(), disconnect: vi.fn() }));
 vi.mock("./actions", () => ({ logout: vi.fn() }));
+vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn() }));
+vi.mock("./clients/actions", () => ({
+  createClientAction: vi.fn(),
+  updateClientAction: vi.fn(),
+  deleteClientAction: vi.fn(),
+  openDealAction: vi.fn(),
+  updateDealAction: vi.fn(),
+  addActivityAction: vi.fn(),
+}));
 vi.mock("./admin/users/actions", () => ({
   approve: vi.fn(),
   reject: vi.fn(),
@@ -29,14 +38,24 @@ import CalendarPage from "./calendar/page";
 import ConversationsPage from "./conversations/page";
 import IntegrationsPage from "./integrations/page";
 import AppLayout from "./layout";
-import LeadsPage from "./leads/page";
+import ClientPage from "./clients/[id]/page";
+import EditClientPage from "./clients/[id]/edit/page";
+import NewClientPage from "./clients/new/page";
+import ClientsPage from "./clients/page";
+import FunnelsPage from "./funnels/page";
 import SettingsPage from "./settings/page";
 import TodayPage from "./today/page";
 
 const USER = { name: "Ana Paula", email: "ana@example.com", image: null, role: "user" as const };
+const noParams = { params: Promise.resolve({}), searchParams: Promise.resolve({}) };
+const withId = { params: Promise.resolve({ id: "3f2b6a4e-1c2d-4e5f-8a9b-0c1d2e3f4a5b" }), searchParams: Promise.resolve({}) };
 const PAGES = {
   TodayPage,
-  LeadsPage,
+  ClientsPage: () => ClientsPage(noParams),
+  NewClientPage: () => NewClientPage(noParams),
+  ClientPage: () => ClientPage(withId),
+  EditClientPage: () => EditClientPage(withId),
+  FunnelsPage: () => FunnelsPage(noParams),
   ConversationsPage,
   CalendarPage,
   IntegrationsPage,
@@ -67,11 +86,11 @@ describe("protected screens", () => {
 
   it("the layout shows the navigation, the user and a way out", async () => {
     render(await AppLayout({ children: <p>conteúdo</p>, params: Promise.resolve({}) }));
-    for (const label of ["Hoje", "Leads", "Conversas", "Agenda", "Integrações", "Configurações"]) {
+    for (const label of ["Hoje", "Clientes", "Funis", "Conversas", "Agenda", "Integrações", "Configurações"]) {
       expect(screen.getByRole("link", { name: label })).toBeDefined();
     }
     expect(screen.getByRole("link", { name: "Hoje" }).hasAttribute("data-active")).toBe(true);
-    expect(screen.getByRole("link", { name: "Leads" }).hasAttribute("data-active")).toBe(false);
+    expect(screen.getByRole("link", { name: "Clientes" }).hasAttribute("data-active")).toBe(false);
     const userMenu = screen.getByRole("button", { name: /Ana Paula/ });
     fireEvent.click(userMenu);
     expect(await screen.findByRole("menuitem", { name: "Sair" })).toBeDefined();

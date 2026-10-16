@@ -26,7 +26,12 @@ export class InternalApiError extends Error {
   }
 }
 
-async function call(path: string, init: RequestInit = {}): Promise<Response> {
+/** `pass`: statuses the caller handles itself (404 by default); any other error throws. */
+export async function call(
+  path: string,
+  init: RequestInit = {},
+  pass: readonly number[] = [404],
+): Promise<Response> {
   const base = process.env.API_INTERNAL_URL;
   const token = process.env.INTERNAL_API_TOKEN;
   if (!base || !token) throw new InternalApiError(500);
@@ -35,7 +40,7 @@ async function call(path: string, init: RequestInit = {}): Promise<Response> {
     cache: "no-store",
     headers: { "content-type": "application/json", "x-internal-token": token },
   });
-  if (!response.ok && response.status !== 404) throw new InternalApiError(response.status);
+  if (!response.ok && !pass.includes(response.status)) throw new InternalApiError(response.status);
   return response;
 }
 
