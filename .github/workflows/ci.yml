@@ -54,6 +54,9 @@ jobs:
               -e 's/^AUTH_GOOGLE_SECRET=$/AUTH_GOOGLE_SECRET=ci/' \
               -e 's/^IMOBOS_ADMIN_EMAILS=$/IMOBOS_ADMIN_EMAILS=ci@ci.invalid/' \
               -e 's/^INTERNAL_API_TOKEN=$/INTERNAL_API_TOKEN=ci/' \
+              -e 's/^CHATWOOT_DOMAIN=$/CHATWOOT_DOMAIN=chat.ci.invalid/' \
+              -e 's/^\(CHATWOOT_SECRET_KEY_BASE\|CHATWOOT_AR_ENCRYPTION_[A-Z_]*\)=$/\1=ci/' \
+              -e 's/^\(CHATWOOT_POSTGRES_PASSWORD\|CHATWOOT_REDIS_PASSWORD\)=$/\1=ci/' \
               .env.example > .env
 
       - name: Compose config
