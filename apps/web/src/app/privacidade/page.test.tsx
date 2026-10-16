@@ -11,6 +11,10 @@ describe("/privacidade", () => {
     render(<PrivacyPage />);
     expect(screen.getByRole("heading", { level: 1, name: "Política de privacidade" })).toBeDefined();
     expect(screen.getByText(/não dá acesso/)).toBeDefined();
+    // Meta's App Review asks for data deletion instructions; Google's verification, the calendar use.
+    expect(screen.getByRole("heading", { name: /como apagar seus dados/ })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Google Agenda (opcional)" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "WhatsApp" })).toBeDefined();
     expect(authMock).not.toHaveBeenCalled();
   });
 });
