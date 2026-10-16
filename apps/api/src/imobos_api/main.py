@@ -2,10 +2,12 @@
 
 from fastapi import FastAPI
 
+from .crm_routes import router as crm_router
 from .internal import router as internal_router
 
 app = FastAPI(title="ImobOS API")
 app.include_router(internal_router)
+app.include_router(crm_router)
 
 
 @app.get("/healthz")
