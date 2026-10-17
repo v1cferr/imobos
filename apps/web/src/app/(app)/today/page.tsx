@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { type CalendarEvent, getToday, type TodayItem, type TodayReason } from "@/lib/api/crm";
+import { CalendarEvents } from "@/components/crm/calendar-events";
+import { getToday, type TodayItem, type TodayReason } from "@/lib/api/crm";
 import { requireUser } from "@/lib/auth/session";
 import { PIPELINES, stageLabel } from "@/lib/crm/labels";
 import { greeting } from "@/lib/greeting";
@@ -95,57 +96,6 @@ function ItemCard({ item, now }: { item: TodayItem; now: Date }) {
   );
 }
 
-function EventRow({ event }: { event: CalendarEvent }) {
-  const when = event.all_day
-    ? "Dia todo"
-    : `${TIME.format(new Date(event.start))}${event.end ? `–${TIME.format(new Date(event.end))}` : ""}`;
-  return (
-    <li className="flex gap-3">
-      <span className="w-24 shrink-0 text-sm text-muted-foreground tabular-nums">{when}</span>
-      <div className="min-w-0">
-        {event.link ? (
-          <a href={event.link} target="_blank" rel="noreferrer" className="font-medium underline-offset-4 hover:underline">
-            {event.title}
-          </a>
-        ) : (
-          <p className="font-medium">{event.title}</p>
-        )}
-        {event.location && <p className="text-sm text-muted-foreground">{event.location}</p>}
-        {event.client_id && (
-          <Link href={`/clients/${event.client_id}`} className="text-sm underline underline-offset-4">
-            {event.client_name}
-          </Link>
-        )}
-      </div>
-    </li>
-  );
-}
-
-function Calendar({ calendar, events }: { calendar: string; events: CalendarEvent[] }) {
-  if (calendar === "not_connected") {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Conecte a Google Agenda em <Link className="underline" href="/integrations">Integrações</Link> para ver suas visitas aqui.
-      </p>
-    );
-  }
-  if (calendar !== "ok") {
-    return (
-      <p className="text-sm text-destructive">
-        Não consegui ler a sua agenda agora. Veja em <Link className="underline" href="/integrations">Integrações</Link>.
-      </p>
-    );
-  }
-  if (events.length === 0) return <p className="text-sm text-muted-foreground">Nada na agenda hoje.</p>;
-  return (
-    <ul className="flex flex-col gap-3">
-      {events.map((e) => (
-        <EventRow key={`${e.start}-${e.title}`} event={e} />
-      ))}
-    </ul>
-  );
-}
-
 export default async function TodayPage() {
   const user = await requireUser();
   const firstName = user.name?.split(" ")[0];
@@ -184,7 +134,7 @@ export default async function TodayPage() {
           <CalendarDays aria-hidden className="size-5" />
           Agenda de hoje
         </h2>
-        <Calendar calendar={today.calendar} events={today.events} />
+        <CalendarEvents calendar={today.calendar} events={today.events} empty="Nada na agenda hoje." />
       </section>
 
       {today.items.length === 0 ? (

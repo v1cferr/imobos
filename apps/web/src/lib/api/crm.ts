@@ -199,3 +199,9 @@ export async function getToday(): Promise<Today> {
 export async function completeAction(dealId: string, actor: string): Promise<CrmResult<ClientDetail>> {
   return result(await call(`/internal/crm/deals/${id(dealId)}/done`, json("POST", { actor }), PASS));
 }
+
+export type Agenda = { now: string; events: CalendarEvent[]; calendar: string };
+
+export async function getAgenda(days = 7): Promise<Agenda> {
+  return (await call(`/internal/crm/agenda?days=${days}`)).json();
+}

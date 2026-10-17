@@ -5,7 +5,7 @@ each thing.
 """
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated, Any
 
@@ -343,26 +343,51 @@ def get_today(
         for i in today.items(session, moment)
     ]
     start, end = today.day_bounds(moment)
-    calendar = "ok"
-    events: list[EventOut] = []
+    events, calendar = _events(session, settings, client, start, end)
+    return TodayOut(now=moment, items=items, events=events, calendar=calendar)
+
+
+def _events(
+    session: Session, settings: Settings, client: httpx.Client, start: datetime, end: datetime
+) -> tuple[list[EventOut], str]:
+    """Calendar events in [start, end) linked to clients, and the calendar state for the screen."""
     try:
         found = connections.calendar_events(session, settings, client, time_min=start, time_max=end)
     except google.GoogleError as e:
-        found, calendar = [], e.code
+        return [], e.code
     if found is None:
-        calendar = "not_connected"
-    else:
-        events = [
-            EventOut(
-                title=m.event.title,
-                start=m.event.start,
-                end=m.event.end,
-                all_day=m.event.all_day,
-                location=m.event.location,
-                link=m.event.link,
-                client_id=m.client.id if m.client else None,
-                client_name=m.client.name if m.client else None,
-            )
-            for m in today.match_clients(session, found)
-        ]
-    return TodayOut(now=moment, items=items, events=events, calendar=calendar)
+        return [], "not_connected"
+    return [
+        EventOut(
+            title=m.event.title,
+            start=m.event.start,
+            end=m.event.end,
+            all_day=m.event.all_day,
+            location=m.event.location,
+            link=m.event.link,
+            client_id=m.client.id if m.client else None,
+            client_name=m.client.name if m.client else None,
+        )
+        for m in today.match_clients(session, found)
+    ], "ok"
+
+
+class AgendaOut(BaseModel):
+    now: datetime
+    events: list[EventOut]
+    calendar: str
+
+
+@router.get("/agenda")
+def agenda(
+    session: SessionDep,
+    settings: SettingsDep,
+    client: HttpDep,
+    days: Annotated[int, Query(ge=1, le=31)] = 7,
+    now: datetime | None = None,  # tests only
+) -> AgendaOut:
+    """The next `days` days of her calendar, starting today (São Paulo)."""
+    moment = now or datetime.now(UTC)
+    start, _ = today.day_bounds(moment)
+    events, calendar = _events(session, settings, client, start, start + timedelta(days=days))
+    return AgendaOut(now=moment, events=events, calendar=calendar)

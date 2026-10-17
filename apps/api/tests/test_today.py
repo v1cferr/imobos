@@ -131,3 +131,20 @@ def test_day_bounds_follow_sao_paulo(hour: int, expected: str) -> None:
     start, end = day_bounds(datetime(2026, 10, 17, hour, 0, tzinfo=UTC))
     assert start.date().isoformat() == expected
     assert end - start == timedelta(days=1)
+
+
+def test_agenda_covers_the_next_seven_days_from_today(client: TestClient) -> None:
+    connect(client)
+    calls: list[httpx.Request] = []
+
+    def events(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        item = {"id": "1", "summary": "Plantão", "start": {"date": "2026-10-19"}}
+        return httpx.Response(200, json={"items": [item]})
+
+    GOOGLE_STATE[EVENTS] = events
+    body = client.get("/internal/crm/agenda", params={"now": NOW.isoformat()}).json()
+    assert body["calendar"] == "ok"
+    assert [e["title"] for e in body["events"]] == ["Plantão"]
+    assert calls[-1].url.params["timeMin"] == "2026-10-17T00:00:00-03:00"
+    assert calls[-1].url.params["timeMax"] == "2026-10-24T00:00:00-03:00"

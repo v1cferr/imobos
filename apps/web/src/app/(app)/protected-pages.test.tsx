@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireUserMock, requireAdminMock, listUsersMock, listConnectionsMock, getTodayMock } = vi.hoisted(() => ({
+const { requireUserMock, requireAdminMock, listUsersMock, listConnectionsMock, getTodayMock, getAgendaMock } = vi.hoisted(() => ({
   getTodayMock: vi.fn(),
+  getAgendaMock: vi.fn(),
   requireUserMock: vi.fn(),
   requireAdminMock: vi.fn(),
   listUsersMock: vi.fn(),
@@ -15,7 +16,7 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock, listConnections: listConnectionsMock }));
 vi.mock("./integrations/actions", () => ({ check: vi.fn(), connectGoogleCalendar: vi.fn(), disconnect: vi.fn() }));
 vi.mock("./actions", () => ({ logout: vi.fn() }));
-vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn(), getToday: getTodayMock }));
+vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn(), getToday: getTodayMock, getAgenda: getAgendaMock }));
 vi.mock("./today/actions", () => ({ doneAction: vi.fn(), postponeAction: vi.fn() }));
 vi.mock("./clients/actions", () => ({
   createClientAction: vi.fn(),
@@ -157,6 +158,23 @@ describe("protected screens", () => {
     expect(screen.getByText(/Confirmar visita · era para 16\/10/)).toBeDefined();
     expect(screen.getByRole("button", { name: "Feito" })).toBeDefined();
     expect(screen.getByText(/Conecte a Google Agenda/)).toBeDefined();
+  });
+
+  it("the agenda groups the week by São Paulo day, all-day events included", async () => {
+    getAgendaMock.mockResolvedValue({
+      now: "2026-10-17T13:00:00Z",
+      calendar: "ok",
+      events: [
+        { title: "Visita Lapa", start: "2026-10-18T01:30:00Z", end: null, all_day: false, location: null, link: null, client_id: null, client_name: null },
+        { title: "Plantão", start: "2026-10-19T00:00:00Z", end: null, all_day: true, location: null, link: null, client_id: null, client_name: null },
+      ],
+    });
+    render(await CalendarPage());
+    // 22:30 of the 17th in São Paulo, although it is already the 18th in UTC.
+    const today = screen.getByRole("region", { name: "Hoje" });
+    expect(today.textContent).toContain("Visita Lapa");
+    expect(screen.getByRole("region", { name: "Amanhã" }).textContent).toContain("Nada marcado.");
+    expect(screen.getByText("Plantão")).toBeDefined();
   });
 
   it("today with nothing pending says so", async () => {
