@@ -232,6 +232,28 @@ def update_deal(
     return get_client(session, client.id)
 
 
+def complete_action(session: Session, deal_id: uuid.UUID, *, actor: str) -> Client:
+    """ "Feito" in Hoje: the history keeps what was done, and the deal waits for its next action."""
+    deal = session.get(Deal, deal_id)
+    if deal is None:
+        raise NotFoundError
+    client = deal.client
+    if deal.next_action or deal.next_action_due:
+        due = deal.next_action_due.isoformat() if deal.next_action_due else None
+        _log(
+            session,
+            client,
+            ActivityKind.NEXT_ACTION,
+            actor,
+            deal=deal,
+            body=deal.next_action,
+            data={"due": due, "done": True},
+        )
+        deal.next_action, deal.next_action_due = None, None
+    session.commit()
+    return get_client(session, client.id)
+
+
 def add_activity(
     session: Session,
     client_id: uuid.UUID,

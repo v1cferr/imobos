@@ -5,20 +5,25 @@ each thing.
 """
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Annotated, Any
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
-from . import crm
-from .db import get_session
+from . import connections, crm, google, today
+from .config import Settings
+from .db import get_session, get_settings
+from .http import get_http_client
 from .internal import require_internal_token
 from .models import ActivityKind, Client, Deal, LeadSource, Pipeline, Purpose, Stage
 
 SessionDep = Annotated[Session, Depends(get_session)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
+HttpDep = Annotated[httpx.Client, Depends(get_http_client)]
 router = APIRouter(prefix="/internal/crm", dependencies=[Depends(require_internal_token)])
 
 Short = Annotated[str, Field(max_length=200)]
@@ -278,3 +283,86 @@ def board(pipeline: Pipeline, session: SessionDep) -> list[BoardItem]:
         BoardItem(**_deal(d).model_dump(), client_name=d.client.name, client_phone=d.client.phone)
         for d in crm.list_deals(session, pipeline)
     ]
+
+
+class Actor(BaseModel):
+    actor: EmailStr
+
+
+@router.post("/deals/{deal_id}/done")
+def complete_action(deal_id: uuid.UUID, body: Actor, session: SessionDep) -> ClientDetail:
+    try:
+        return _detail(crm.complete_action(session, deal_id, actor=body.actor))
+    except CrmErrors as e:
+        raise _errors(e) from e
+
+
+class TodayItem(BaseModel):
+    reason: today.Reason
+    deal: BoardItem
+    last_contact_at: datetime | None
+
+
+class EventOut(BaseModel):
+    title: str
+    start: datetime
+    end: datetime | None
+    all_day: bool
+    location: str | None
+    link: str | None
+    client_id: uuid.UUID | None
+    client_name: str | None
+
+
+class TodayOut(BaseModel):
+    now: datetime
+    items: list[TodayItem]
+    events: list[EventOut]
+    # "ok", "not_connected", or the connection's short error code ("invalid_grant", "http_403").
+    calendar: str
+
+
+@router.get("/today")
+def get_today(
+    session: SessionDep,
+    settings: SettingsDep,
+    client: HttpDep,
+    now: datetime | None = None,  # tests only; production asks for the present
+) -> TodayOut:
+    moment = now or datetime.now(UTC)
+    items = [
+        TodayItem(
+            reason=i.reason,
+            deal=BoardItem(
+                **_deal(i.deal).model_dump(),
+                client_name=i.deal.client.name,
+                client_phone=i.deal.client.phone,
+            ),
+            last_contact_at=i.last_contact_at,
+        )
+        for i in today.items(session, moment)
+    ]
+    start, end = today.day_bounds(moment)
+    calendar = "ok"
+    events: list[EventOut] = []
+    try:
+        found = connections.calendar_events(session, settings, client, time_min=start, time_max=end)
+    except google.GoogleError as e:
+        found, calendar = [], e.code
+    if found is None:
+        calendar = "not_connected"
+    else:
+        events = [
+            EventOut(
+                title=m.event.title,
+                start=m.event.start,
+                end=m.event.end,
+                all_day=m.event.all_day,
+                location=m.event.location,
+                link=m.event.link,
+                client_id=m.client.id if m.client else None,
+                client_name=m.client.name if m.client else None,
+            )
+            for m in today.match_clients(session, found)
+        ]
+    return TodayOut(now=moment, items=items, events=events, calendar=calendar)

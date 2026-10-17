@@ -115,6 +115,68 @@ def probe_calendar(client: httpx.Client, access_token: str) -> None:
         raise GoogleError(f"http_{response.status_code}")
 
 
+@dataclass(frozen=True)
+class Event:
+    """What Hoje shows of a calendar event. Attendees and descriptions are never read."""
+
+    id: str
+    title: str
+    start: datetime
+    end: datetime | None
+    all_day: bool
+    location: str | None
+    link: str | None
+
+
+def _when(raw: object) -> tuple[datetime | None, bool]:
+    if not isinstance(raw, dict):
+        return None, False
+    if "dateTime" in raw:
+        return datetime.fromisoformat(str(raw["dateTime"])), False
+    if "date" in raw:  # all-day: midnight UTC of that date is only used for ordering
+        return datetime.fromisoformat(str(raw["date"])).replace(tzinfo=UTC), True
+    return None, False
+
+
+def list_events(
+    client: httpx.Client, access_token: str, *, time_min: datetime, time_max: datetime
+) -> list[Event]:
+    """Events of the primary calendar overlapping [time_min, time_max), recurring ones expanded."""
+    response = client.get(
+        EVENTS_URL,
+        params={
+            "timeMin": time_min.isoformat(),
+            "timeMax": time_max.isoformat(),
+            "singleEvents": "true",
+            "orderBy": "startTime",
+            "maxResults": "50",
+            "fields": "items(id,status,summary,start,end,location,htmlLink)",
+        },
+        headers={"authorization": f"Bearer {access_token}"},
+        timeout=15,
+    )
+    if response.status_code != 200:
+        raise GoogleError(f"http_{response.status_code}")
+    events = []
+    for item in response.json().get("items", []):
+        start, all_day = _when(item.get("start"))
+        if start is None or item.get("status") == "cancelled":
+            continue
+        end, _ = _when(item.get("end"))
+        events.append(
+            Event(
+                id=str(item.get("id", "")),
+                title=str(item.get("summary") or "(sem título)"),
+                start=start,
+                end=end,
+                all_day=all_day,
+                location=item.get("location"),
+                link=item.get("htmlLink"),
+            )
+        )
+    return events
+
+
 def revoke(client: httpx.Client, token: str) -> None:
     # Best effort: a token Google already forgot is a success for us.
     client.post(REVOKE_URL, data={"token": token}, timeout=15)

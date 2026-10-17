@@ -114,6 +114,33 @@ def check(
     return conn
 
 
+def calendar_events(
+    session: Session,
+    settings: Settings,
+    client: httpx.Client,
+    *,
+    time_min: datetime,
+    time_max: datetime,
+) -> list[google.Event] | None:
+    """Today's events for Hoje, or None when no calendar is connected. A refusal marks the
+    connection as broken, like a check would, so Integrations shows what to do."""
+    conn = _get(session, Provider.GOOGLE_CALENDAR)
+    if conn is None or not configured(settings, Provider.GOOGLE_CALENDAR):
+        return None
+    cipher = TokenCipher(settings.token_keys)
+    try:
+        token = _fresh_access_token(conn, cipher, settings, client)
+        events = google.list_events(client, token, time_min=time_min, time_max=time_max)
+    except google.GoogleError as e:
+        conn.status, conn.last_error = ConnectionStatus.ERROR, e.code
+        conn.last_checked_at = datetime.now(UTC)
+        session.commit()
+        log.warning("connection.events_failed provider=google_calendar error=%s", e.code)
+        raise
+    session.commit()  # keeps a refreshed access token
+    return events
+
+
 def disconnect(
     session: Session, settings: Settings, client: httpx.Client, provider: Provider
 ) -> None:
