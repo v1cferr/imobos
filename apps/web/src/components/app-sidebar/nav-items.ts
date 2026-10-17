@@ -1,7 +1,6 @@
 import {
   CalendarDays,
   type LucideIcon,
-  MessagesSquare,
   Plug,
   Settings,
   SquareKanban,
@@ -16,7 +15,6 @@ export const MAIN_NAV: readonly NavItem[] = [
   { href: "/today", label: "Hoje", icon: Sun },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/funnels", label: "Funis", icon: SquareKanban },
-  { href: "/conversations", label: "Conversas", icon: MessagesSquare },
   { href: "/calendar", label: "Agenda", icon: CalendarDays },
   { href: "/integrations", label: "Integrações", icon: Plug },
   { href: "/settings", label: "Configurações", icon: Settings },

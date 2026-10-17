@@ -37,7 +37,6 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined })
 
 import AdminUsersPage from "./admin/users/page";
 import CalendarPage from "./calendar/page";
-import ConversationsPage from "./conversations/page";
 import IntegrationsPage from "./integrations/page";
 import AppLayout from "./layout";
 import ClientPage from "./clients/[id]/page";
@@ -58,7 +57,6 @@ const PAGES = {
   ClientPage: () => ClientPage(withId),
   EditClientPage: () => EditClientPage(withId),
   FunnelsPage: () => FunnelsPage(noParams),
-  ConversationsPage,
   CalendarPage,
   IntegrationsPage,
   SettingsPage,
@@ -88,7 +86,7 @@ describe("protected screens", () => {
 
   it("the layout shows the navigation, the user and a way out", async () => {
     render(await AppLayout({ children: <p>conteúdo</p>, params: Promise.resolve({}) }));
-    for (const label of ["Hoje", "Clientes", "Funis", "Conversas", "Agenda", "Integrações", "Configurações"]) {
+    for (const label of ["Hoje", "Clientes", "Funis", "Agenda", "Integrações", "Configurações"]) {
       expect(screen.getByRole("link", { name: label })).toBeDefined();
     }
     expect(screen.getByRole("link", { name: "Hoje" }).hasAttribute("data-active")).toBe(true);
