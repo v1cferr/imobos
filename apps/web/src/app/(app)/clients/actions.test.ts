@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireUserMock, createMock, updateDealMock, addActivityMock } = vi.hoisted(() => ({
+const { requireUserMock, createMock, updateDealMock, addActivityMock, recordMock } = vi.hoisted(() => ({
+  recordMock: vi.fn(),
   requireUserMock: vi.fn(),
   createMock: vi.fn(),
   updateDealMock: vi.fn(),
@@ -11,6 +12,7 @@ vi.mock("@/lib/api/crm", () => ({
   createClient: createMock,
   updateDeal: updateDealMock,
   addActivity: addActivityMock,
+  recordMessage: recordMock,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -19,7 +21,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-import { addActivityAction, createClientAction, updateDealAction } from "./actions";
+import { addActivityAction, createClientAction, sendMessageAction, updateDealAction } from "./actions";
 
 const ID = "3f2b6a4e-1c2d-4e5f-8a9b-0c1d2e3f4a5b";
 const DEAL = "9a8b7c6d-1c2d-4e5f-8a9b-0c1d2e3f4a5b";
@@ -32,7 +34,7 @@ const form = (fields: Record<string, string>) => {
 describe("client actions", () => {
   beforeEach(() => {
     requireUserMock.mockReset().mockResolvedValue({ email: "corretora@example.com" });
-    [createMock, updateDealMock, addActivityMock].forEach((m) => m.mockReset());
+    [createMock, updateDealMock, addActivityMock, recordMock].forEach((m) => m.mockReset());
   });
 
   it("quick add sends the signed-in user as actor and opens the client with a toast", async () => {
@@ -81,6 +83,19 @@ describe("client actions", () => {
       "invalid client_id",
     );
     expect(addActivityMock).not.toHaveBeenCalled();
+  });
+
+  it("records the message, then opens her WhatsApp with the text ready", async () => {
+    recordMock.mockResolvedValue({ ok: true, value: {} });
+    await expect(
+      sendMessageAction(form({ client_id: ID, phone: "+5511987654321", body: "Oi, Ana!", template: "Primeiro contato" })),
+    ).rejects.toThrow("NEXT_REDIRECT:https://wa.me/5511987654321?text=Oi%2C%20Ana!");
+    expect(recordMock).toHaveBeenCalledWith(ID, {
+      actor: "corretora@example.com",
+      body: "Oi, Ana!",
+      template: "Primeiro contato",
+      deal_id: null,
+    });
   });
 
   it("does nothing without a signed-in user", async () => {

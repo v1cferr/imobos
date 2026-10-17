@@ -1,4 +1,4 @@
-import { CalendarDays, Check, ChevronRight, Clock, Plus } from "lucide-react";
+import { CalendarDays, Check, ChevronRight, Clock, MessageCircle, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +86,12 @@ function ItemCard({ item, now }: { item: TodayItem; now: Date }) {
               {scheduled ? "Amanhã" : "Lembrar amanhã"}
             </Button>
           </form>
+          {deal.client_phone && (
+            <Button size="sm" variant="outline" render={<Link href={`/clients/${deal.client_id}#mensagem`} />} nativeButton={false}>
+              <MessageCircle aria-hidden />
+              Mensagem
+            </Button>
+          )}
           <Button size="sm" variant="ghost" render={<Link href={`/clients/${deal.client_id}`} />} nativeButton={false}>
             Abrir
             <ChevronRight aria-hidden />

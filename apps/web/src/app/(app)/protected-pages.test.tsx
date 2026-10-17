@@ -16,7 +16,8 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock, listConnections: listConnectionsMock }));
 vi.mock("./integrations/actions", () => ({ check: vi.fn(), connectGoogleCalendar: vi.fn(), disconnect: vi.fn() }));
 vi.mock("./actions", () => ({ logout: vi.fn() }));
-vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn(), getToday: getTodayMock, getAgenda: getAgendaMock }));
+vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn(), getToday: getTodayMock, getAgenda: getAgendaMock, listTemplates: vi.fn() }));
+vi.mock("./settings/messages/actions", () => ({ saveTemplateAction: vi.fn(), deleteTemplateAction: vi.fn() }));
 vi.mock("./today/actions", () => ({ doneAction: vi.fn(), postponeAction: vi.fn() }));
 vi.mock("./clients/actions", () => ({
   createClientAction: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("./clients/actions", () => ({
   openDealAction: vi.fn(),
   updateDealAction: vi.fn(),
   addActivityAction: vi.fn(),
+  sendMessageAction: vi.fn(),
 }));
 vi.mock("./admin/users/actions", () => ({
   approve: vi.fn(),
@@ -45,6 +47,7 @@ import EditClientPage from "./clients/[id]/edit/page";
 import NewClientPage from "./clients/new/page";
 import ClientsPage from "./clients/page";
 import FunnelsPage from "./funnels/page";
+import MessagesSettingsPage from "./settings/messages/page";
 import SettingsPage from "./settings/page";
 import TodayPage from "./today/page";
 
@@ -61,6 +64,7 @@ const PAGES = {
   CalendarPage,
   IntegrationsPage,
   SettingsPage,
+  MessagesSettingsPage,
 };
 
 describe("protected screens", () => {

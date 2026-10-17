@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DealCard } from "@/components/crm/deal-card";
+import { MessageComposer } from "@/components/crm/message-composer";
 import { History } from "@/components/crm/history";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,9 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import { type ClientDetail, getClient, type Pipeline } from "@/lib/api/crm";
+import { type ClientDetail, getClient, listTemplates, type Pipeline } from "@/lib/api/crm";
 import { requireUser } from "@/lib/auth/session";
+import { fillTemplate } from "@/lib/crm/messages";
 import { BRL, formatPhone, MANUAL_KINDS, PIPELINES, PURPOSES, SOURCES, stageLabel } from "@/lib/crm/labels";
 
 import { addActivityAction, deleteClientAction, openDealAction } from "../actions";
@@ -55,15 +57,21 @@ function Wants({ client }: { client: ClientDetail }) {
 }
 
 export default async function ClientPage({ params }: PageProps<"/clients/[id]">) {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await params;
-  const client = UUID.test(id) ? await getClient(id) : null;
+  const [client, templates] = await Promise.all([UUID.test(id) ? getClient(id) : null, listTemplates()]);
   if (!client) notFound();
 
   const open = client.deals.filter((d) => d.stage !== "won" && d.stage !== "lost");
   const closed = client.deals.filter((d) => !open.includes(d));
   const free = (Object.keys(PIPELINES) as Pipeline[]).filter((p) => !open.some((d) => d.pipeline === p));
   const wa = client.phone ? `https://wa.me/${client.phone.slice(1)}` : null;
+  // The open deal the message is most likely about: the one with a next action, else the newest.
+  const focus = open.find((d) => d.next_action) ?? open[open.length - 1] ?? null;
+  const filled = templates.map((t) => ({
+    title: t.title,
+    text: fillTemplate(t.body, { client, deal: focus, broker: user.name }),
+  }));
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -133,6 +141,25 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
             ))}
           </ul>
         )}
+      </section>
+
+      <section aria-labelledby="mensagem-title" id="mensagem" className="flex flex-col gap-3 scroll-mt-20">
+        <h2 id="mensagem-title" className="text-xl font-semibold">
+          Mensagem pronta
+        </h2>
+        {client.phone ? (
+          <MessageComposer clientId={client.id} phone={client.phone} dealId={focus?.id ?? null} templates={filled} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Cadastre o WhatsApp do cliente em <Link className="underline" href={`/clients/${client.id}/edit`}>Editar</Link> para
+            mandar mensagens prontas.
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground">
+          <Link className="underline" href="/settings/messages">
+            Editar as mensagens prontas
+          </Link>
+        </p>
       </section>
 
       <section aria-labelledby="record" className="flex flex-col gap-3">

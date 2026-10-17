@@ -1,4 +1,5 @@
 import { LogOut } from "lucide-react";
+import Link from "next/link";
 
 import { ThemeSelect } from "@/components/theme-select";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,17 @@ export default async function SettingsPage() {
               Sair
             </Button>
           </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Mensagens prontas</CardTitle>
+          <CardDescription>Os textos de follow-up que você abre no WhatsApp a partir da ficha do cliente.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link href="/settings/messages" />} nativeButton={false}>
+            Editar mensagens
+          </Button>
         </CardContent>
       </Card>
       <Card>

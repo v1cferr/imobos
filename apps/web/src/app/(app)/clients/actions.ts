@@ -9,6 +9,7 @@ import {
   type CrmProblem,
   deleteClient,
   openDeal,
+  recordMessage,
   updateClient,
   updateDeal,
 } from "@/lib/api/crm";
@@ -24,6 +25,7 @@ import {
   text,
 } from "@/lib/crm/form";
 import { MANUAL_KINDS } from "@/lib/crm/labels";
+import { whatsappUrl } from "@/lib/crm/messages";
 import { withFlash } from "@/lib/flash";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -138,4 +140,24 @@ export async function addActivityAction(form: FormData): Promise<void> {
   });
   revalidatePath(`/clients/${clientId}`);
   redirect(withFlash(`/clients/${clientId}`, result.ok ? "activity_added" : result.problem));
+}
+
+/** Records the message in the history, then hands her over to WhatsApp with the text ready. */
+export async function sendMessageAction(form: FormData): Promise<void> {
+  const user = await requireUser();
+  const clientId = uuid(form, "client_id");
+  const phone = text(form, "phone");
+  const body = text(form, "body");
+  if (!phone || !body) throw new Error("invalid message");
+  const dealId = form.get("deal_id");
+  const result = await recordMessage(clientId, {
+    actor: user.email,
+    body,
+    template: text(form, "template"),
+    deal_id: typeof dealId === "string" && UUID.test(dealId) ? dealId : null,
+  });
+  if (!result.ok) redirect(withFlash(`/clients/${clientId}`, result.problem));
+  revalidatePath(`/clients/${clientId}`);
+  revalidatePath("/today");
+  redirect(whatsappUrl(phone, body));
 }

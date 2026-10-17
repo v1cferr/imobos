@@ -205,3 +205,28 @@ export type Agenda = { now: string; events: CalendarEvent[]; calendar: string };
 export async function getAgenda(days = 7): Promise<Agenda> {
   return (await call(`/internal/crm/agenda?days=${days}`)).json();
 }
+
+export type Template = { id: string; title: string; body: string; position: number };
+
+export async function listTemplates(): Promise<Template[]> {
+  return (await call("/internal/crm/templates")).json();
+}
+
+export async function createTemplate(body: { title: string; body: string }): Promise<void> {
+  await call("/internal/crm/templates", json("POST", body));
+}
+
+export async function updateTemplate(templateId: string, body: { title: string; body: string }): Promise<void> {
+  await call(`/internal/crm/templates/${id(templateId)}`, json("PUT", body));
+}
+
+export async function deleteTemplate(templateId: string): Promise<void> {
+  await call(`/internal/crm/templates/${id(templateId)}`, { method: "DELETE" });
+}
+
+export async function recordMessage(
+  clientId: string,
+  body: { actor: string; body: string; template?: string | null; deal_id?: string | null },
+): Promise<CrmResult<ClientDetail>> {
+  return result(await call(`/internal/crm/clients/${id(clientId)}/messages`, json("POST", body), PASS));
+}
