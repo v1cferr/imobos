@@ -4,7 +4,7 @@ import { useActionState } from "react";
 
 import { createClientAction, type FormState } from "@/app/(app)/clients/actions";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,13 @@ import { PIPELINES, SOURCES } from "@/lib/crm/labels";
 import { FormProblem } from "./form-problem";
 
 /** Few fields, big targets: made to be filled on the phone, right after a call or a visit. */
-export function QuickAddForm({ defaultPipeline }: { defaultPipeline?: string }) {
+export function QuickAddForm({
+  defaultPipeline,
+  defaults = {},
+}: {
+  defaultPipeline?: string;
+  defaults?: { name?: string; phone?: string };
+}) {
   const [state, action, pending] = useActionState<FormState, FormData>(createClientAction, {});
   const v = state.values ?? {};
   return (
@@ -22,11 +28,18 @@ export function QuickAddForm({ defaultPipeline }: { defaultPipeline?: string }) 
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="name">Nome</FieldLabel>
-          <Input id="name" name="name" required autoComplete="off" defaultValue={v.name} />
+          <Input id="name" name="name" required autoComplete="off" defaultValue={v.name ?? defaults.name} />
         </Field>
         <Field>
           <FieldLabel htmlFor="phone">WhatsApp</FieldLabel>
-          <Input id="phone" name="phone" type="tel" inputMode="tel" placeholder="(11) 98765-4321" defaultValue={v.phone} />
+          <Input
+            id="phone"
+            name="phone"
+            inputMode="tel"
+            placeholder="(11) 98765-4321 ou link wa.me"
+            defaultValue={v.phone ?? defaults.phone}
+          />
+          <FieldDescription>Pode colar o número do jeito que veio, ou o link do WhatsApp.</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="pipeline">Funil</FieldLabel>

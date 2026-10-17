@@ -93,3 +93,14 @@ export function tomorrowOf(due: string | null, now: Date = new Date()): string {
   const sp = new Date(now.getTime() - 3 * 60 * 60 * 1000 + DAY); // São Paulo's calendar date
   return `${sp.toISOString().slice(0, 10)}T09:00:00-03:00`;
 }
+
+/**
+ * A phone as she pastes it: "(11) 98765-4321", "+55 11 ...", or a WhatsApp link
+ * (wa.me/5511987654321, api.whatsapp.com/send?phone=5511987654321). Links become "+<digits>";
+ * anything else goes to the api as typed, which validates and normalizes it.
+ */
+export function pastedPhone(raw: string | null): string | null {
+  if (!raw) return null;
+  const link = /(?:wa\.me\/|[?&]phone=)\+?(\d{8,15})/.exec(raw);
+  return link ? `+${link[1]}` : raw;
+}

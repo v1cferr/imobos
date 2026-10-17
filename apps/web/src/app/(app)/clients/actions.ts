@@ -13,7 +13,16 @@ import {
   updateDeal,
 } from "@/lib/api/crm";
 import { requireUser } from "@/lib/auth/session";
-import { clientFields, localDateTime, money, pipelineOf, sourceOf, stageOf, text } from "@/lib/crm/form";
+import {
+  clientFields,
+  localDateTime,
+  money,
+  pastedPhone,
+  pipelineOf,
+  sourceOf,
+  stageOf,
+  text,
+} from "@/lib/crm/form";
 import { MANUAL_KINDS } from "@/lib/crm/labels";
 import { withFlash } from "@/lib/flash";
 
@@ -52,7 +61,7 @@ export async function createClientAction(_: FormState, form: FormData): Promise<
   const result = await createClient({
     actor: user.email,
     name,
-    phone: text(form, "phone"),
+    phone: pastedPhone(text(form, "phone")),
     source: sourceOf(form) ?? "manual",
     need: text(form, "need"),
     pipeline: pipelineOf(form),
@@ -68,7 +77,13 @@ export async function updateClientAction(clientId: string, _: FormState, form: F
   if (!UUID.test(clientId)) throw new Error("invalid client id");
   const { name, source, ...rest } = clientFields(form);
   if (!name) return { error: "O nome não pode ficar vazio." };
-  const result = await updateClient(clientId, { actor: user.email, name, ...(source ? { source } : {}), ...rest });
+  const result = await updateClient(clientId, {
+    actor: user.email,
+    name,
+    ...(source ? { source } : {}),
+    ...rest,
+    phone: pastedPhone(rest.phone),
+  });
   if (!result.ok) return problem(result, form);
   revalidatePath(`/clients/${clientId}`);
   redirect(withFlash(`/clients/${clientId}`, "client_updated"));
