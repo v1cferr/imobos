@@ -47,6 +47,8 @@ export const FLASH: Record<string, Flash> = {
   deal_opened: { type: "success", title: "Entrou no funil" },
   deal_updated: { type: "success", title: "Negócio atualizado" },
   activity_added: { type: "success", title: "Registrado no histórico" },
+  action_done: { type: "success", title: "Feito", description: "Ficou no histórico. Marque a próxima ação." },
+  action_postponed: { type: "info", title: "Adiado para amanhã" },
   open_deal_exists: {
     type: "error",
     title: "Já existe um negócio aberto nesse funil",

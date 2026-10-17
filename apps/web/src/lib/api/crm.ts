@@ -171,3 +171,31 @@ export async function addActivity(
 export async function listBoard(pipeline: Pipeline): Promise<BoardItem[]> {
   return (await call(`/internal/crm/deals?pipeline=${pipeline}`)).json();
 }
+
+export type TodayReason = "overdue" | "due_today" | "new_lead" | "no_next_action";
+export type TodayItem = { reason: TodayReason; deal: BoardItem; last_contact_at: string | null };
+export type CalendarEvent = {
+  title: string;
+  start: string;
+  end: string | null;
+  all_day: boolean;
+  location: string | null;
+  link: string | null;
+  client_id: string | null;
+  client_name: string | null;
+};
+export type Today = {
+  now: string;
+  items: TodayItem[];
+  events: CalendarEvent[];
+  /** "ok", "not_connected", or the connection's short error code. */
+  calendar: string;
+};
+
+export async function getToday(): Promise<Today> {
+  return (await call("/internal/crm/today")).json();
+}
+
+export async function completeAction(dealId: string, actor: string): Promise<CrmResult<ClientDetail>> {
+  return result(await call(`/internal/crm/deals/${id(dealId)}/done`, json("POST", { actor }), PASS));
+}

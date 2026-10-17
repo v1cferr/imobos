@@ -16,7 +16,8 @@ function detail(activity: Activity, deals: Deal[]): string | null {
       return (data.fields as string[] | undefined)?.map((f) => FIELD_LABELS[f] ?? f).join(", ") ?? null;
     case "next_action": {
       const due = typeof data.due === "string" ? ` (${WHEN.format(new Date(data.due))})` : "";
-      return activity.body ? `${activity.body}${due}` : "Sem próxima ação";
+      const done = data.done === true ? "Feito: " : "";
+      return activity.body ? `${done}${activity.body}${due}` : "Sem próxima ação";
     }
     default:
       return activity.body;

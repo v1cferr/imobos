@@ -84,3 +84,12 @@ export function clientFields(form: FormData): Omit<ClientFields, "name" | "sourc
     need: text(form, "need"),
   };
 }
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** "Amanhã" in Hoje: same time tomorrow; without a time, 9:00 tomorrow in São Paulo. */
+export function tomorrowOf(due: string | null, now: Date = new Date()): string {
+  if (due) return new Date(new Date(due).getTime() + DAY).toISOString();
+  const sp = new Date(now.getTime() - 3 * 60 * 60 * 1000 + DAY); // São Paulo's calendar date
+  return `${sp.toISOString().slice(0, 10)}T09:00:00-03:00`;
+}

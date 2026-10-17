@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireUserMock, requireAdminMock, listUsersMock, listConnectionsMock } = vi.hoisted(() => ({
+const { requireUserMock, requireAdminMock, listUsersMock, listConnectionsMock, getTodayMock } = vi.hoisted(() => ({
+  getTodayMock: vi.fn(),
   requireUserMock: vi.fn(),
   requireAdminMock: vi.fn(),
   listUsersMock: vi.fn(),
@@ -14,7 +15,8 @@ vi.mock("@/lib/auth/session", () => ({
 vi.mock("@/lib/api/internal", () => ({ listUsers: listUsersMock, listConnections: listConnectionsMock }));
 vi.mock("./integrations/actions", () => ({ check: vi.fn(), connectGoogleCalendar: vi.fn(), disconnect: vi.fn() }));
 vi.mock("./actions", () => ({ logout: vi.fn() }));
-vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn() }));
+vi.mock("@/lib/api/crm", () => ({ listClients: vi.fn(), getClient: vi.fn(), listBoard: vi.fn(), getToday: getTodayMock }));
+vi.mock("./today/actions", () => ({ doneAction: vi.fn(), postponeAction: vi.fn() }));
 vi.mock("./clients/actions", () => ({
   createClientAction: vi.fn(),
   updateClientAction: vi.fn(),
@@ -138,11 +140,32 @@ describe("protected screens", () => {
     expect(screen.queryByRole("button", { name: "Desativar" })).toBeNull();
   });
 
-  it("today answers the daily question and labels its numbers as examples", async () => {
+  it("today lists what is late with a one-tap done, and says when the calendar is not connected", async () => {
+    const deal = {
+      id: "d1", client_id: "c1", pipeline: "sales", stage: "visit_scheduled", property: "Caminhos da Lapa",
+      value: null, next_action: "Confirmar visita", next_action_due: "2026-10-16T13:00:00Z", objections: null,
+      lost_reason: null, created_at: "2026-10-10T12:00:00Z", updated_at: "2026-10-10T12:00:00Z", closed_at: null,
+      client_name: "João Silva", client_phone: null,
+    };
+    getTodayMock.mockResolvedValue({
+      now: "2026-10-17T13:00:00Z",
+      items: [{ reason: "overdue", deal, last_contact_at: null }],
+      events: [],
+      calendar: "not_connected",
+    });
     render(await TodayPage());
     expect(screen.getByRole("heading", { level: 1, name: "O que preciso fazer hoje?" })).toBeDefined();
-    expect(screen.getByText(/dados de exemplo/)).toBeDefined();
-    expect(screen.getByText("João Silva")).toBeDefined();
+    expect(screen.getByRole("link", { name: "João Silva" })).toBeDefined();
+    expect(screen.getByText(/Confirmar visita · era para 16\/10/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "Feito" })).toBeDefined();
+    expect(screen.getByText(/Conecte a Google Agenda/)).toBeDefined();
+  });
+
+  it("today with nothing pending says so", async () => {
+    getTodayMock.mockResolvedValue({ now: "2026-10-17T13:00:00Z", items: [], events: [], calendar: "ok" });
+    render(await TodayPage());
+    expect(screen.getByText("Tudo em dia")).toBeDefined();
+    expect(screen.getByText("Nada na agenda hoje.")).toBeDefined();
   });
 
   it("integrations shows the calendar state and the Chatwoot channels", async () => {

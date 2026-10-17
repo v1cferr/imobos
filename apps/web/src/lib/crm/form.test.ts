@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clientFields, localDateTime, money, toLocalInput } from "./form";
+import { clientFields, localDateTime, money, toLocalInput, tomorrowOf } from "./form";
 import { formatPhone, stageLabel } from "./labels";
 
 const form = (fields: Record<string, string>) => {
@@ -32,6 +32,12 @@ describe("CRM forms", () => {
     expect(fields.pets).toBe(false);
     expect(fields.financing).toBeNull();
     expect(fields.purpose).toBeNull();
+  });
+
+  it("postpones to the same time tomorrow, or 9:00 tomorrow in São Paulo", () => {
+    expect(tomorrowOf("2026-10-17T17:00:00.000Z")).toBe("2026-10-18T17:00:00.000Z");
+    // 23:30 on the 17th in São Paulo is already the 18th in UTC; tomorrow is still the 18th there.
+    expect(tomorrowOf(null, new Date("2026-10-18T02:30:00Z"))).toBe("2026-10-18T09:00:00-03:00");
   });
 
   it("shows phones and stages in her words", () => {
