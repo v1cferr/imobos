@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
-from . import connections, crm, google, today
+from . import connections, crm, google, messages, today
 from .config import Settings
 from .db import get_session, get_settings
 from .http import get_http_client
@@ -391,3 +391,68 @@ def agenda(
     start, _ = today.day_bounds(moment)
     events, calendar = _events(session, settings, client, start, start + timedelta(days=days))
     return AgendaOut(now=moment, events=events, calendar=calendar)
+
+
+class TemplateIn(BaseModel):
+    title: Annotated[str, Field(min_length=1, max_length=80)]
+    body: Annotated[str, Field(min_length=1, max_length=2_000)]
+
+
+class TemplateOut(TemplateIn):
+    id: uuid.UUID
+    position: int
+
+
+class MessageSent(BaseModel):
+    actor: EmailStr
+    body: Annotated[str, Field(min_length=1, max_length=4_000)]
+    template: Annotated[str, Field(max_length=80)] | None = None
+    deal_id: uuid.UUID | None = None
+
+
+def _template(t: object) -> TemplateOut:
+    return TemplateOut.model_validate(t, from_attributes=True)
+
+
+@router.get("/templates")
+def list_templates(session: SessionDep) -> list[TemplateOut]:
+    return [_template(t) for t in messages.list_templates(session)]
+
+
+@router.post("/templates", status_code=status.HTTP_201_CREATED)
+def create_template(body: TemplateIn, session: SessionDep) -> TemplateOut:
+    return _template(messages.create_template(session, title=body.title, body=body.body))
+
+
+@router.put("/templates/{template_id}")
+def update_template(template_id: uuid.UUID, body: TemplateIn, session: SessionDep) -> TemplateOut:
+    try:
+        return _template(
+            messages.update_template(session, template_id, title=body.title, body=body.body)
+        )
+    except CrmErrors as e:
+        raise _errors(e) from e
+
+
+@router.delete("/templates/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_template(template_id: uuid.UUID, session: SessionDep) -> None:
+    try:
+        messages.delete_template(session, template_id)
+    except CrmErrors as e:
+        raise _errors(e) from e
+
+
+@router.post("/clients/{client_id}/messages", status_code=status.HTTP_201_CREATED)
+def message_sent(client_id: uuid.UUID, body: MessageSent, session: SessionDep) -> ClientDetail:
+    try:
+        client = messages.record_sent(
+            session,
+            client_id,
+            actor=body.actor,
+            body=body.body,
+            template=body.template,
+            deal_id=body.deal_id,
+        )
+    except CrmErrors as e:
+        raise _errors(e) from e
+    return _detail(client)

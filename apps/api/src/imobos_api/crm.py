@@ -68,7 +68,7 @@ def normalize_phone(raw: str | None) -> str | None:
     return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
 
 
-def _log(
+def log(
     session: Session,
     client: Client,
     kind: ActivityKind,
@@ -125,7 +125,7 @@ def create_client(
     fields.setdefault("source", LeadSource.MANUAL)
     client = Client(id=uuid.uuid4(), created_by=actor, **fields)
     session.add(client)
-    _log(session, client, ActivityKind.CREATED, actor, data={"source": str(client.source)})
+    log(session, client, ActivityKind.CREATED, actor, data={"source": str(client.source)})
     if pipeline is not None:
         _open_deal(session, client, actor, pipeline, listing=listing)
     session.commit()
@@ -143,7 +143,7 @@ def update_client(
     for k in changed:
         setattr(client, k, changes[k])
     if changed:
-        _log(session, client, ActivityKind.UPDATED, actor, data={"fields": sorted(changed)})
+        log(session, client, ActivityKind.UPDATED, actor, data={"fields": sorted(changed)})
     session.commit()
     return get_client(session, client.id)
 
@@ -170,7 +170,7 @@ def _open_deal(
     deal = Deal(id=uuid.uuid4(), pipeline=pipeline, stage=Stage.NEW, property=listing)
     client.deals.append(deal)
     session.flush()
-    _log(session, client, ActivityKind.DEAL_OPENED, actor, deal=deal, data={"pipeline": pipeline})
+    log(session, client, ActivityKind.DEAL_OPENED, actor, deal=deal, data={"pipeline": pipeline})
     return deal
 
 
@@ -201,7 +201,7 @@ def update_deal(
         raise NotFoundError
     client = deal.client
     if stage is not None and stage != deal.stage:
-        _log(
+        log(
             session,
             client,
             ActivityKind.STAGE_CHANGED,
@@ -219,7 +219,7 @@ def update_deal(
             setattr(deal, k, v)
     if action_changed:
         due = deal.next_action_due.isoformat() if deal.next_action_due else None
-        _log(
+        log(
             session,
             client,
             ActivityKind.NEXT_ACTION,
@@ -240,7 +240,7 @@ def complete_action(session: Session, deal_id: uuid.UUID, *, actor: str) -> Clie
     client = deal.client
     if deal.next_action or deal.next_action_due:
         due = deal.next_action_due.isoformat() if deal.next_action_due else None
-        _log(
+        log(
             session,
             client,
             ActivityKind.NEXT_ACTION,
@@ -268,7 +268,7 @@ def add_activity(
     deal = next((d for d in client.deals if d.id == deal_id), None) if deal_id else None
     if deal_id and deal is None:
         raise NotFoundError
-    _log(session, client, kind, actor, deal=deal, body=body)
+    log(session, client, kind, actor, deal=deal, body=body)
     session.commit()
     return get_client(session, client.id)
 

@@ -235,3 +235,19 @@ class Activity(Base):
     )
 
     client: Mapped[Client] = relationship(back_populates="activities")
+
+
+class MessageTemplate(Base):
+    """A ready-made message she sends from her own WhatsApp (click-to-chat). Placeholders such as
+    {nome} and {empreendimento} are filled per client by the web app before opening WhatsApp."""
+
+    __tablename__ = "message_templates"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(80))
+    body: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
