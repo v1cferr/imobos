@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Suspense } from "react";
@@ -40,7 +40,12 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "ImobOS", description: DESCRIPTION },
   // A private tool: link previews yes, search engines no (Caddy also sends X-Robots-Tag).
   robots: { index: false, follow: false },
+  // Installed on iPhone from Safari: full screen, with the app's name under the icon.
+  appleWebApp: { capable: true, title: "ImobOS", statusBarStyle: "default" },
 };
+
+// The phone's status bar follows the app's ink in the installed app.
+export const viewport: Viewport = { themeColor: "#18181b" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
