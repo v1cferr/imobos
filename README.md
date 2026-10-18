@@ -72,9 +72,11 @@ infrastructure/
   caddy/             the edge: TLS and security headers
   chatwoot/          Chatwoot bootstrap (account and super admin before the route exists)
   backup/            nightly pg_dump + restic off-site, restore drill, systemd timer
+  monitor/           uptime check every 5 minutes, reported to healthchecks.io
+  journald/          log retention for the containers
 docs/
   adr/               architecture decision records
-  operations/        production host, deploy, backup and Chatwoot runbooks
+  operations/        production host, deploy, backup, monitoring and Chatwoot runbooks
   integrations/      one page per connected service (Google Calendar, Chatwoot channels)
 compose.yaml         runtime of the services
 flake.nix            development environment (flake.lock pins it)

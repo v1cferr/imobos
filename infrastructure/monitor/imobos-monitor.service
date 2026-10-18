@@ -1,0 +1,9 @@
+[Unit]
+Description=ImobOS uptime check: public URLs and disk, reported to healthchecks.io
+Documentation=file:///srv/imobos/docs/operations/monitoring.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/srv/imobos/infrastructure/monitor/imobos-monitor.sh

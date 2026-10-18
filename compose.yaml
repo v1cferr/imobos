@@ -8,11 +8,19 @@
 #   internet -> caddy -[chat]-> chatwoot -[chat-data]-> chatwoot-postgres, chatwoot-redis
 name: imobos
 
+# Every service logs to the host's journald (V1C-118): logs survive a container being recreated
+# by a deploy, are kept 14 days, and stay readable with `docker compose logs`.
+x-logging: &logging
+  driver: journald
+  options:
+    tag: "{{.Name}}"
+
 # Chatwoot (ADR 0009): one image runs both the Rails app and the Sidekiq worker, with the same
 # settings. Pinned like everything else; an upgrade is a reviewed edit, migrations run by hand.
 x-chatwoot: &chatwoot
   image: chatwoot/chatwoot:v4.18.0
   restart: unless-stopped
+  logging: *logging
   environment:
     TZ: ${TZ:-America/Sao_Paulo}
     NODE_ENV: production
@@ -63,6 +71,7 @@ services:
   caddy:
     image: caddy:2.11.6-alpine
     restart: unless-stopped
+    logging: *logging
     ports:
       - "80:80"
       - "443:443"
@@ -90,6 +99,7 @@ services:
         SITE_URL: https://${IMOBOS_DOMAIN:?set IMOBOS_DOMAIN in .env}
     image: imobos/web:local
     restart: unless-stopped
+    logging: *logging
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
       # Authentication (ADR 0006). AUTH_URL is the public origin; the Google callback is
@@ -112,6 +122,7 @@ services:
       context: apps/api
     image: imobos/api:local
     restart: unless-stopped
+    logging: *logging
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
       DATABASE_URL: postgresql://${POSTGRES_USER:-imobos}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-imobos}
@@ -138,6 +149,7 @@ services:
   postgres:
     image: postgres:17.11 # same major as the flake's psql
     restart: unless-stopped
+    logging: *logging
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
       POSTGRES_USER: ${POSTGRES_USER:-imobos}
@@ -155,6 +167,7 @@ services:
   redis:
     image: redis:8.8.3-alpine # same version as the flake's redis-cli
     restart: unless-stopped
+    logging: *logging
     # The password travels through the environment, never on the command line `ps` shows.
     command: ["sh", "-c", "exec redis-server --requirepass \"$$REDIS_PASSWORD\" --appendonly yes"]
     environment:
@@ -191,6 +204,7 @@ services:
   chatwoot-postgres:
     image: pgvector/pgvector:0.8.7-pg17 # PostgreSQL 17, the flake's psql major
     restart: unless-stopped
+    logging: *logging
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
       POSTGRES_USER: chatwoot
@@ -208,6 +222,7 @@ services:
   chatwoot-redis:
     image: redis:8.8.3-alpine
     restart: unless-stopped
+    logging: *logging
     command: ["sh", "-c", "exec redis-server --requirepass \"$$REDIS_PASSWORD\" --appendonly yes"]
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
