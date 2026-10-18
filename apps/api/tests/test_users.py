@@ -1,4 +1,4 @@
-from conftest import ADMIN
+from conftest import ADMIN, GOOGLE_STATE
 from fastapi.testclient import TestClient
 
 from imobos_api.config import Settings
@@ -105,3 +105,29 @@ def test_only_pending_requests_can_be_rejected(client: TestClient) -> None:
 def test_unknown_user_ids_answer_404(client: TestClient) -> None:
     missing = "00000000-0000-0000-0000-000000000000"
     assert client.patch(f"/internal/users/{missing}", json={"actor": ADMIN}).status_code == 404
+
+
+def pushes() -> list[tuple[str, str, str]]:
+    calls = GOOGLE_STATE.get("calls", [])
+    assert isinstance(calls, list)
+    return [c for c in calls if c[1] == "ntfy.example/secret-topic"]
+
+
+def test_the_admin_is_pushed_once_per_new_request_without_personal_data(
+    client: TestClient,
+) -> None:
+    GOOGLE_STATE.clear()
+    sign_in(client, "ana@example.com", name="Ana Souza")
+    sign_in(client, "ana@example.com", name="Ana Souza")  # trying again: no second push
+    sign_in(client, ADMIN)  # admins never create requests
+    sent = pushes()
+    assert len(sent) == 1
+    assert "ana" not in sent[0][2].lower() and "souza" not in sent[0][2].lower()
+
+
+def test_a_push_failure_never_blocks_the_request(client: TestClient) -> None:
+    import httpx
+
+    GOOGLE_STATE.clear()
+    GOOGLE_STATE["ntfy.example/secret-topic"] = lambda r: httpx.Response(500)
+    assert sign_in(client, "bia@example.com")["outcome"] == "pending"

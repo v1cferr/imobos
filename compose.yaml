@@ -126,6 +126,8 @@ services:
       IMOBOS_TOKEN_KEYS: ${IMOBOS_TOKEN_KEYS:-}
       GOOGLE_INTEGRATIONS_CLIENT_ID: ${GOOGLE_INTEGRATIONS_CLIENT_ID:-}
       GOOGLE_INTEGRATIONS_CLIENT_SECRET: ${GOOGLE_INTEGRATIONS_CLIENT_SECRET:-}
+      # Push to the admin's phone (ntfy topic URL) on a new access request. Empty turns it off.
+      IMOBOS_NOTIFY_URL: ${IMOBOS_NOTIFY_URL:-}
     depends_on:
       postgres:
         condition: service_healthy

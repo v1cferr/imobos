@@ -25,6 +25,8 @@ class Settings:
     # The Google OAuth client for integrations (Calendar), separate from the login client.
     google_client_id: str = ""
     google_client_secret: str = ""
+    # ntfy topic URL (https://ntfy.sh/<secret topic>) for pushes to the admin's phone. Optional.
+    notify_url: str = ""
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -40,4 +42,5 @@ class Settings:
             ),
             google_client_id=os.environ.get("GOOGLE_INTEGRATIONS_CLIENT_ID", ""),
             google_client_secret=os.environ.get("GOOGLE_INTEGRATIONS_CLIENT_SECRET", ""),
+            notify_url=os.environ.get("IMOBOS_NOTIFY_URL", "").strip(),
         )

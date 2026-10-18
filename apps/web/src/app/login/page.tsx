@@ -2,7 +2,7 @@ import { CircleAlert, Clock, KeyRound } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -40,9 +40,13 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {pending && (
             <Alert role="status">
               <Clock aria-hidden />
+              <AlertTitle>Pedido recebido</AlertTitle>
               <AlertDescription>
-                Pedido de acesso enviado. Assim que o administrador aprovar, é só entrar de novo com
-                a mesma conta Google.
+                <p>
+                  O administrador já foi avisado no celular e vai liberar o seu acesso assim que
+                  puder.
+                </p>
+                <p>Quando ele liberar, toque em &quot;Continuar com Google&quot; de novo com a mesma conta.</p>
               </AlertDescription>
             </Alert>
           )}
@@ -54,7 +58,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           )}
           <form action={signInWithGoogle}>
             <Button type="submit" size="lg" className="w-full">
-              Continuar com Google
+              {pending ? "Já liberou? Continuar com Google" : "Continuar com Google"}
             </Button>
           </form>
         </CardContent>

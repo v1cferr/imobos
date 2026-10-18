@@ -49,6 +49,7 @@ def settings() -> Settings:
         token_keys=(TOKEN_KEY,),
         google_client_id="client-id",
         google_client_secret="client-secret",
+        notify_url="https://ntfy.example/secret-topic",
     )
 
 

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
-from . import connections, google, users
+from . import connections, google, notify, users
 from .config import Settings
 from .db import get_session, get_settings
 from .http import get_http_client
@@ -68,10 +68,21 @@ class UserUpdate(BaseModel):
 
 
 @router.post("/users/sign-in")
-def sign_in(body: SignInRequest, session: SessionDep, settings: SettingsDep) -> SignInResponse:
+def sign_in(
+    body: SignInRequest, session: SessionDep, settings: SettingsDep, client: HttpDep
+) -> SignInResponse:
     result = users.sign_in(
         session, settings, email=body.email, name=body.name, google_sub=body.google_sub
     )
+    if result.new_request:
+        notify.notify_admin(
+            client,
+            settings,
+            title="Novo pedido de acesso ao ImobOS",
+            message="Alguém pediu para entrar. Toque para aprovar ou recusar.",
+            path="/admin/users",
+            priority="high",
+        )
     return SignInResponse(outcome=result.outcome, role=result.role)
 
 

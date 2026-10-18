@@ -17,6 +17,8 @@ SignInOutcome = Literal["approved", "pending", "disabled", "closed", "full", "co
 class SignInResult:
     outcome: SignInOutcome
     role: UserRole | None = None
+    # True only when this sign-in created the request: the admin is told once, not on every retry.
+    new_request: bool = False
 
 
 class ProtectedUserError(Exception):
@@ -41,6 +43,7 @@ def sign_in(
     """Called after Google verified the address. Never trusts anything but the verified identity."""
     email = normalize(email)
     user = _by_email(session, email)
+    created = False
 
     # Google's `sub` is the stable account id. The same email with another sub is a different
     # (for example recycled) account and must not inherit this access.
@@ -62,11 +65,12 @@ def sign_in(
             return SignInResult("full")
         user = User(email=email, status=UserStatus.PENDING, role=UserRole.USER)
         session.add(user)
+        created = True
 
     user.name = name
     user.google_sub = google_sub
     session.commit()
-    return SignInResult(user.status.value, user.role)
+    return SignInResult(user.status.value, user.role, new_request=created)
 
 
 def access_of(

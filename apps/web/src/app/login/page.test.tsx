@@ -39,7 +39,10 @@ describe("/login", () => {
 
   it("tells a new account its request is waiting for approval", async () => {
     render(await LoginPage(params(undefined, "pending")));
-    expect(screen.getByRole("status").textContent).toContain("aprovar");
+    const status = screen.getByRole("status").textContent ?? "";
+    expect(status).toContain("Pedido recebido");
+    expect(status).toContain("avisado");
+    expect(screen.getByRole("button", { name: /Já liberou\?/ })).toBeDefined();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
